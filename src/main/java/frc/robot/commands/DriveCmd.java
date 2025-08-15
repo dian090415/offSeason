@@ -15,13 +15,7 @@ public class DriveCmd extends Command {
     private final SwerveSubsystem swerveSubsystem;
     private final Supplier<Double> xSpdFunc, ySpdFunc, turningSpdFunc, breakFunc;
     private final Supplier<Boolean> fieldOrientedFunc;
-    private final SlewRateLimiter xLimiter, yLimiter, turningLimiter; // 搖桿加速度限制
-
-    /*
-     * 搖桿與機器座標對應：
-     * 搖桿Y軸 ( 上下 ) 對應 機器X軸 ( 上下 )
-     * 搖桿X軸 ( 左右 ) 對應 機器Y軸 ( 左右 )
-     */
+    private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
 
     public DriveCmd(SwerveSubsystem swerveSubsystem,
             Supplier<Double> xSpdFunc, Supplier<Double> ySpdFunc, Supplier<Double> turningSpdFunc,

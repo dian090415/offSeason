@@ -27,12 +27,14 @@ import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
 
+
 public class SwerveSubsystem extends SubsystemBase {
 
     private final PIDController xController = new PIDController(10.0, 0.0, 0.0);
     private final PIDController yController = new PIDController(10.0, 0.0, 0.0);
     private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
     private final Optional<Trajectory<SwerveSample>> trajectory = Choreo.loadTrajectory("New Path");
+
 
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(DriveConstants.moduleLocations);
 
@@ -124,9 +126,10 @@ public class SwerveSubsystem extends SubsystemBase {
 
         // Generate the next speeds for the robot
         ChassisSpeeds speeds = new ChassisSpeeds(
-                sample.vx + xController.calculate(pose.getX(), sample.x),
-                sample.vy + yController.calculate(pose.getY(), sample.y),
-                sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
+            sample.vx + xController.calculate(pose.getX(), sample.x),
+            sample.vy + yController.calculate(pose.getY(), sample.y),
+            sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading)
+        );
 
         // Apply the generated speeds
         runVelocity(speeds);
@@ -146,7 +149,6 @@ public class SwerveSubsystem extends SubsystemBase {
     public Rotation2d getRotation2d() {
         return Rotation2d.fromDegrees(getHeading());
     }
-
     public Rotation2d turngetRotation2d() {
         return Rotation2d.fromDegrees(-getHeading());
     }
@@ -164,7 +166,7 @@ public class SwerveSubsystem extends SubsystemBase {
         odometer.resetPosition(getRotation2d(), getModulePosition(), pose);
     }
 
-    public void setOdometry() {
+    public void setOdometry(){
         odometer.resetPose(trajectory.get().getInitialPose(false).get());
     }
 
@@ -173,10 +175,6 @@ public class SwerveSubsystem extends SubsystemBase {
     public SwerveDriveKinematics getKinematics() {
         return DriveConstants.kDriveKinematics;
     }
-
-    // 自動模式建構器(PathPlanner需要)
-
-    // ________________________________
 
     // 設定模組狀態 (給個別模組設定目標速度和角度)
     public void drive(double xSpeed, double ySpeed, double rotation, boolean fieldRelative) {

@@ -170,7 +170,7 @@ public class SwerveModule {
         try {
             System.out.println("Robot Stopped!!!");
         } catch (Exception e) {
-            System.err.println("Error stopping robot: " + e.getMessage());
+            System.err.println("Fuck robot: " + e.getMessage());
         }
     }
 }
