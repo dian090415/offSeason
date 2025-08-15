@@ -1,6 +1,8 @@
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO" version "2025.2.1"
+    id "edu.wpi.first.GradleRIO" version "2025.3.2"
+    id "io.freefair.lombok" version "8.4" // Lombok 插件：編譯時處理 @Getter 等
+
 }
 
 java {
