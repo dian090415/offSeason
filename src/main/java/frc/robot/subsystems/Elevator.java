@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -42,12 +43,15 @@ public class Elevator extends SubsystemBase {
     private final TalonFX main = new TalonFX(5);
     private final TalonFX follow = new TalonFX(6);
     private final double ratio = 0.28;
-    private final double metersPerRotation = 0.03494 * 2;
-    private final double[] Levelmeter = {0.0 , 0.0, 0.00816, 0.4098, 1.032, 0.0, 0.0}; //初始， L1 , L2 , L3 , L4 , alage1 , alage2
+    private final double metersPerRotation = 0.03494 * 2 * 100;
+    private final double[] Levelmeter = { 0.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100, 0.0, 0.0 }; // 初始， L1 , L2
+                                                                                                          // , L3 , L4 ,
+                                                                                                          // alage1 ,
+                                                                                                          // alage2
 
-    private final TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(0.2,
-            0.1);
-    private final ProfiledPIDController pidController = new ProfiledPIDController(0.85, 0, 0.0435, m_constraints);
+    private final TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(800,
+            750);
+    private final ProfiledPIDController pidController = new ProfiledPIDController(0.65, 0, 0.0, m_constraints);
     private final ElevatorFeedforward ElevatorFeedforward = new ElevatorFeedforward(0.0, 0.0, 0.0, 0.0);// TODO
 
     private final VoltageOut voltagRequire = new VoltageOut(0.0);
@@ -62,18 +66,51 @@ public class Elevator extends SubsystemBase {
                     this));
 
     public Elevator() {
-
-
-        follow.setControl(new Follower(main.getDeviceID(), true));
-    }
-    public void Config(){
-        Slot0Configs slot0Config = new Slot0Configs();
-        slot0Config.kP = 70.0; // 依實測調整
-        slot0Config.kG = 0.2; // 重力抵銷，依實測
-
-        this.main.getConfigurator().apply(slot0Config); 
+        pidController.setTolerance(0.20, 0.05);
+        this.main.getConfigurator().setPosition(0.0);
+        this.follow.getConfigurator().setPosition(0.0);
+        this.Config();
+        follow.setControl(new Follower(main.getDeviceID(), false));
     }
 
+// ---------------------新輸出模式---------------------
+    public void Config() {
+        // in init function
+        var talonFXConfigs = new TalonFXConfiguration();
+
+        // set slot 0 gains
+        var slot0Configs = talonFXConfigs.Slot0;
+        slot0Configs.kS = 0.25; // Add 0.25 V output to overcome static friction
+        slot0Configs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
+        slot0Configs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
+        slot0Configs.kP = 0.11; // An error of 1 rps results in 0.11 V output
+        slot0Configs.kI = 0; // no output for integrated error
+        slot0Configs.kD = 0; // no output for error derivative
+
+        // set Motion Magic Velocity settings
+        var motionMagicConfigs = talonFXConfigs.MotionMagic;
+        motionMagicConfigs.MotionMagicAcceleration = 400; // Target acceleration of 400 rps/s (0.25 seconds to max)
+        motionMagicConfigs.MotionMagicJerk = 4000; // Target jerk of 4000 rps/s/s (0.1 seconds)
+
+        // Brake 模式
+        talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+        // 馬達正反轉
+        talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+        //設定馬達與機構齒輪比
+        talonFXConfigs.Feedback.SensorToMechanismRatio = 0.06988;
+
+        main.getConfigurator().apply(talonFXConfigs);
+        follow.getConfigurator().apply(talonFXConfigs);
+    }
+    public void Magicgo(){
+        main.setControl(new MotionMagicExpoVoltage(0).withSlot(0).withPosition(this.Magiclevel()));
+    }
+
+
+    
+//-------------profiled pid輸出模式--------------------------------
     public double encoder() {
         return this.main.getPosition().getValueAsDouble() * this.metersPerRotation;
     }
@@ -84,13 +121,15 @@ public class Elevator extends SubsystemBase {
         }
         SmartDashboard.putNumber("Level", level);
     }
-    
-    
-    public Command gogoal() {
-        return moveToPositionCommand()
-            .andThen(keepCommand());
+
+    public double Magiclevel(){
+        return  this.pidController.getGoal().position;
     }
-    
+
+    public Command gogoal() {
+        return moveToPositionCommand();
+    }
+
     public Command levelCommand(int whatLevel) {
         return runOnce(() -> setLevel(whatLevel));
     }
@@ -129,9 +168,10 @@ public class Elevator extends SubsystemBase {
     }
 
     public void keep() {
-        this.main.setControl(new PositionVoltage(pidController.getGoal().position / metersPerRotation).withSlot(0));
+        this.main.setControl(new PositionVoltage(this.encoder()).withSlot(0));
     }
-    public Command keepCommand(){
+
+    public Command keepCommand() {
         return runOnce(() -> this.keep());
     }
 
@@ -177,5 +217,6 @@ public class Elevator extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putBoolean("atgoal", this.atgoal());
         SmartDashboard.putNumber("goal", this.pidController.getGoal().position);
+        SmartDashboard.putNumber("encoder", this.encoder());
     }
 }

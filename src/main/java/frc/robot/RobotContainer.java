@@ -4,7 +4,9 @@ package frc.robot;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Head;
 import frc.robot.commands.ElevatorCmd;
+import frc.robot.commands.HeadCmd;
 
 public class RobotContainer {
 
@@ -12,10 +14,14 @@ public class RobotContainer {
 
   private final Elevator Elevator = new Elevator();
 
+  private final Head Head = new Head();
+
   private final ElevatorCmd ElevatorCmd = new ElevatorCmd(Elevator, controller);
+  private final HeadCmd HeadCmd = new HeadCmd(Head, controller);
 
   public RobotContainer() {
     this.Elevator.setDefaultCommand(this.ElevatorCmd);
+    this.Head.setDefaultCommand(this.HeadCmd);
     this.configBindings();
 
   }
