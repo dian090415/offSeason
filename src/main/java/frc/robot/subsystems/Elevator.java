@@ -40,49 +40,50 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 
 public class Elevator extends SubsystemBase {
 
-    private final TalonFX main = new TalonFX(5);
-    private final TalonFX follow = new TalonFX(6);
+    private final TalonFX main = new TalonFX(22);
+    private final TalonFX follow = new TalonFX(23);
     private final double ratio = 0.28;
     private final double metersPerRotation = 0.03494 * 2 * 100;
-    private final double[] Levelmeter = { 0.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100, 0.0, 0.0 }; // 初始， L1 , L2
+    private final double[] Levelmeter = { 0.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100 ,0.0, 0.0 }; // 初始， L1 , L2
                                                                                                           // , L3 , L4 ,
                                                                                                           // alage1 ,
                                                                                                           // alage2
 
-    private final TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(800,
-            750);
-    private final ProfiledPIDController pidController = new ProfiledPIDController(0.65, 0, 0.0, m_constraints);
-    private final ElevatorFeedforward ElevatorFeedforward = new ElevatorFeedforward(0.0, 0.0, 0.0, 0.0);// TODO
+    private final TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(550,
+            500);
+    private final ProfiledPIDController pidController = new ProfiledPIDController(0.65, 0, 0.015, m_constraints);
+    private final ElevatorFeedforward ElevatorFeedforward = new ElevatorFeedforward(0.0, 0.0, 0.0, 0.0);//0.13218, 0.0, 0.056884, 0.05076
 
     private final VoltageOut voltagRequire = new VoltageOut(0.0);
     private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(2).per(Second), Volts.of(5),
+            new SysIdRoutine.Config(Volts.of(0.5).per(Second), Volts.of(2),
                     null, (state) -> SignalLogger.writeString("state", state.toString())),
             new SysIdRoutine.Mechanism(
-                    (volts) -> {
+                    (volts)
+                     -> {
                         this.main.setControl(voltagRequire.withOutput(volts.in(Volts)));
                     },
                     null,
                     this));
 
     public Elevator() {
-        pidController.setTolerance(0.20, 0.05);
+        pidController.setTolerance(0.2, 0.05);
         this.main.getConfigurator().setPosition(0.0);
         this.follow.getConfigurator().setPosition(0.0);
         this.Config();
         follow.setControl(new Follower(main.getDeviceID(), false));
     }
 
-// ---------------------新輸出模式---------------------
+    // ---------------------新輸出模式---------------------
     public void Config() {
         // in init function
         var talonFXConfigs = new TalonFXConfiguration();
 
         // set slot 0 gains
         var slot0Configs = talonFXConfigs.Slot0;
-        slot0Configs.kS = 0.25; // Add 0.25 V output to overcome static friction
-        slot0Configs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-        slot0Configs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
+        slot0Configs.kS = 0.13218; // Add 0.25 V output to overcome static friction
+        slot0Configs.kV = 0.056884; // A velocity target of 1 rps results in 0.12 V output
+        slot0Configs.kA = 0.05076; // An acceleration of 1 rps/s requires 0.01 V output
         slot0Configs.kP = 0.11; // An error of 1 rps results in 0.11 V output
         slot0Configs.kI = 0; // no output for integrated error
         slot0Configs.kD = 0; // no output for error derivative
@@ -96,21 +97,26 @@ public class Elevator extends SubsystemBase {
         talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         // 馬達正反轉
-        talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-        //設定馬達與機構齒輪比
-        talonFXConfigs.Feedback.SensorToMechanismRatio = 0.06988;
+        talonFXConfigs.CurrentLimits
+                .withStatorCurrentLimitEnable(true)
+                .withStatorCurrentLimit(70.0)
+                .withSupplyCurrentLimitEnable(true)
+                .withSupplyCurrentLimit(50.0);
 
         main.getConfigurator().apply(talonFXConfigs);
         follow.getConfigurator().apply(talonFXConfigs);
     }
-    public void Magicgo(){
+
+    public void Magicgo() {
         main.setControl(new MotionMagicExpoVoltage(0).withSlot(0).withPosition(this.Magiclevel()));
     }
 
-
-    
-//-------------profiled pid輸出模式--------------------------------
+    // -------------profiled pid輸出模式--------------------------------
+    public double goal(){
+        return this.pidController.getGoal().position;
+    }
     public double encoder() {
         return this.main.getPosition().getValueAsDouble() * this.metersPerRotation;
     }
@@ -122,16 +128,12 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("Level", level);
     }
 
-    public double Magiclevel(){
-        return  this.pidController.getGoal().position;
+    public double Magiclevel() {
+        return this.pidController.getGoal().position;
     }
 
     public Command gogoal() {
         return moveToPositionCommand();
-    }
-
-    public Command levelCommand(int whatLevel) {
-        return runOnce(() -> setLevel(whatLevel));
     }
 
     public void setVoltage(double speed) {
@@ -149,6 +151,7 @@ public class Elevator extends SubsystemBase {
             double feedforwardVoltage = ElevatorFeedforward.calculate(this.encoder(),
                     pidController.getSetpoint().velocity);
             setVoltage(feedbackVoltage + feedforwardVoltage);
+            SmartDashboard.putNumber("ELEsetout", feedbackVoltage + feedforwardVoltage);
 
         });
     }
@@ -158,8 +161,13 @@ public class Elevator extends SubsystemBase {
                 restandset(),
                 goalto()
                         .until(() -> pidController.atGoal()))
-                .withTimeout(3);
+                .withTimeout(2);
     }
+    public Command moveTo(){
+        return Commands.sequence(
+            this.moveToPositionCommand(),
+            this.keepCommand());
+    } 
 
     public Command restandset() {
         return Commands.runOnce(() -> {
@@ -167,12 +175,15 @@ public class Elevator extends SubsystemBase {
         });
     }
 
-    public void keep() {
-        this.main.setControl(new PositionVoltage(this.encoder()).withSlot(0));
-    }
-
     public Command keepCommand() {
-        return runOnce(() -> this.keep());
+        return runEnd(
+            () -> {
+                double pidOutput = pidController.calculate(this.encoder(), this.encoder());
+                double ff = ElevatorFeedforward.calculate(0.0);
+                main.setVoltage(pidOutput + ff);
+            },
+            () -> main.setVoltage(0.0) // 離開時停止
+        );
     }
 
     public boolean atgoal() {
@@ -195,28 +206,28 @@ public class Elevator extends SubsystemBase {
         return Commands.runOnce(SignalLogger::stop);
     }
 
-    // public Command sysIdElevatorTest() { TODO
-    // return Commands.sequence(
-    // this.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
-    // .raceWith(new WaitUntilCommand(() -> this.encoder() > 0.15)),
-    // new WaitCommand(1.5),
+    public Command sysIdElevatorTest() {
+    return Commands.sequence(
+    this.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+    .raceWith(new WaitUntilCommand(() -> this.encoder() > 100.0)),
+    new WaitCommand(0.5),
 
-    // this.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
-    // .raceWith(new WaitUntilCommand(() -> this.encoder() < 0.15)),
-    // new WaitCommand(1.5),
+    this.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
+    .raceWith(new WaitUntilCommand(() -> this.encoder() < 20.0)),
+    new WaitCommand(0.5),
 
-    // this.sysIdDynamic(SysIdRoutine.Direction.kForward)
-    // .raceWith(new WaitUntilCommand(() -> this.encoder() > 0.15)),
-    // new WaitCommand(1.5),
+    this.sysIdDynamic(SysIdRoutine.Direction.kForward)
+    .raceWith(new WaitUntilCommand(() -> this.encoder() > 100.0)),
+    new WaitCommand(0.5),
 
-    // this.sysIdDynamic(SysIdRoutine.Direction.kReverse)
-    // .raceWith(new WaitUntilCommand(() -> this.encoder() < 0.15)));
-    // }
+    this.sysIdDynamic(SysIdRoutine.Direction.kReverse)
+    .raceWith(new WaitUntilCommand(() -> this.encoder() < 20.0)));
+    }
 
     @Override
     public void periodic() {
         SmartDashboard.putBoolean("atgoal", this.atgoal());
         SmartDashboard.putNumber("goal", this.pidController.getGoal().position);
-        SmartDashboard.putNumber("encoder", this.encoder());
+        SmartDashboard.putNumber("Eleencoder", this.encoder());
     }
 }

@@ -112,4 +112,7 @@ public final class Constants {
     public static final class MotorConstants {
         public static final double kNeoFreeSpeedRpm = 6784;
     }
+    public static final class robotConstants {
+        public static final double bumper = 10.0;
+    }
 }

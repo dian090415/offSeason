@@ -23,7 +23,7 @@ public class HeadCmd extends Command {
 	public void execute() {
 		double speed = MathUtil.applyDeadband(this.controller.getLeftY(),0.05) * 5;
         // this.Head.setVoltage(speed);
-		this.Head.intakesetVoltage(speed);
+		// this.Head.intakesetVoltage(speed);
 	}
 
 	@Override

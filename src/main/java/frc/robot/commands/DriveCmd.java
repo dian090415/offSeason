@@ -13,19 +13,18 @@ import frc.robot.subsystems.Drivetrain.SwerveSubsystem;
 public class DriveCmd extends Command {
 
     private final SwerveSubsystem swerveSubsystem;
-    private final Supplier<Double> xSpdFunc, ySpdFunc, turningSpdFunc, breakFunc;
+    private final Supplier<Double> xSpdFunc, ySpdFunc, turningSpdFunc;
     private final Supplier<Boolean> fieldOrientedFunc;
     private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
 
     public DriveCmd(SwerveSubsystem swerveSubsystem,
             Supplier<Double> xSpdFunc, Supplier<Double> ySpdFunc, Supplier<Double> turningSpdFunc,
-            Supplier<Boolean> fieldOrientedFunc, Supplier<Double> breakFunc) {
+            Supplier<Boolean> fieldOrientedFunc) {
 
         this.swerveSubsystem = swerveSubsystem;
         this.xSpdFunc = xSpdFunc;
         this.ySpdFunc = ySpdFunc;
         this.turningSpdFunc = turningSpdFunc;
-        this.breakFunc = breakFunc;
         this.fieldOrientedFunc = fieldOrientedFunc;
 
         this.xLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSec);
@@ -46,7 +45,7 @@ public class DriveCmd extends Command {
         double ySpd;
         double turningSpd;
 
-        double breakswerve = 1.0 - breakFunc.get();
+        double breakswerve = 1;
 
         xSpd = xSpdFunc.get();
         ySpd = ySpdFunc.get();
@@ -68,14 +67,14 @@ public class DriveCmd extends Command {
 
         if (fieldOrientedFunc.get()) {
             // 場地相對位置
-            this.swerveSubsystem.drive(xSpd, ySpd, turningSpd, true);
+            // this.swerveSubsystem.drive(xSpd, ySpd, turningSpd, true);
         } else {
             // 機器絕對位置
             chassisSpeeds = new ChassisSpeeds(xSpd, ySpd, turningSpd);
             // 5. 將底盤速度轉換為全向輪狀態
             SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
             // 6. 輸出至全向輪
-            swerveSubsystem.setModuleStates(moduleStates);
+            // swerveSubsystem.setModuleStates(moduleStates);
         }
 
     }

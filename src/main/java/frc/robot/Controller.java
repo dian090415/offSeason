@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class Controller extends XboxController {
     public Controller() {
-        super(0);
+        super(1);
     }
 
     public Trigger L4() {

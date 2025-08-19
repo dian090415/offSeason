@@ -3,16 +3,16 @@ package frc.robot.commands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Arm;
 
-public class ElevatorCmd extends Command {
-	private final Elevator Elevator;
+public class ArmCmd extends Command {
+	private final Arm Arm;
 	private final XboxController controller;
 
-	public ElevatorCmd(Elevator Elevator , XboxController controller){
-		this.Elevator = Elevator;
+	public ArmCmd(Arm Arm , XboxController controller){
+		this.Arm = Arm;
 		this.controller = controller;
-		this.addRequirements(this.Elevator);
+		this.addRequirements(this.Arm);
 	}
 
 	@Override
@@ -22,12 +22,11 @@ public class ElevatorCmd extends Command {
 	@Override
 	public void execute() {
 		double speed = MathUtil.applyDeadband(this.controller.getLeftY(),0.05) * 8;
-		// this.Elevator.setVoltage(speed);
+        this.Arm.setVoltage(speed);
 	}
 
 	@Override
-	public void end(boolean interrupted) {
-		this.Elevator.stop();
+	public void end(boolean interrupted) {;
 	}
 
 	@Override
