@@ -23,15 +23,18 @@ public class Superstructure extends SubsystemBase {
     private final double Elevatorminmeter = 0.0;//TODO
     private final double Elevatormaxmeter = 0.0;//TODO  
     private final double Headsafemeter = 0.0;//TODO
-    private final double[] headLevel = {0.0};//TODO 預設
-    private final double[] Armchoose = {0.0 ,0.0};//可以L4，不行
+    private final double[] headLevel = {19.01025390625};//TODO 預設
+    private final double[] Armchoose = {27.39599609375 ,25.2978515625};//可以L4，不行
     public double headputcoral = 0.0;
-    public double headintake = 5.88154296875;
+    public double coarlheadintake = 5.44677734375;
+    public double alageheadintake = 3.0;
     public double headkeep = 1.0;
-    public double armdown = -0.32861328125;
+    public double coralarmdown = -0.42861328125;
+    public double alagearmdown = 5.0;
     public double armkeep = 26.4033203125;
     public int Level;
-    public Boolean invertarm;
+    public boolean invertarm;
+    public boolean coraloralage;
     
         public Superstructure(Arm arm, Elevator elevator, Head head) {
             this.elevator = elevator;
@@ -39,6 +42,7 @@ public class Superstructure extends SubsystemBase {
             this.head = head;
             this.Level = 0;
             this.invertarm = false;
+            this.coraloralage = false;
         }
     
         public Command test() {
@@ -46,26 +50,63 @@ public class Superstructure extends SubsystemBase {
                 this.elevator.moveToPositionCommand()
             );
         }
+        public void setcoralorintake(double num){
+            if(num == 1){
+                this.coraloralage = true;
+            }else if(num == 0){
+                this.coraloralage = false;
+            }
+        }
+        public Command setcmd(double num){
+            return runOnce(() -> this.setcoralorintake(num));
+        }
+        public Command intake(){
+            if(coraloralage){
+                return coralintakedown();
+            }else{
+                return alageintakedown();
+            }
+        }
 
-        public Command intakedown(){
+        public Command coralintakedown(){
             return Commands.sequence(
                 Commands.runOnce(() -> this.setLevel(0), this),
 
                 Commands.parallel(
-                this.arm.moveToCommand(armdown),
-                this.head.magicgocCommand(headintake),
+               this.arm.moveToCommand(coralarmdown),
+                this.head.magicgocCommand(coarlheadintake),
                 this.elevator.moveToPositionCommand()
-                ).until(() -> this.arm.armatgoal(armdown)),
-                this.head.intakeexecute().until(() -> this.head.isCoralIn()),
+                ).until(() -> this.arm.armatgoal(coralarmdown)),
+                this.head.coarlintakeexecute().until(() -> this.head.isCoralIn()),
                 this.head.intakebackexecute().withTimeout(0.5)
+            ); 
+        }
+        public Command alageintakedown(){
+            return Commands.sequence(
+                Commands.runOnce(() -> this.setLevel(0), this),
+
+                Commands.parallel(
+                this.arm.moveToCommand(alagearmdown),
+                this.head.magicgocCommand(alageheadintake),
+                this.elevator.moveToPositionCommand()
+                ).until(() -> this.arm.armatgoal(alagearmdown)),
+                this.head.alagelintakeexecute()
             );
         }
-        public Command allkeep(){
+        public Command coralkeep(){
             return Commands.sequence(
                 Commands.runOnce(() -> this.setLevel(0), this),
                 this.arm.moveToCommand(armkeep)
                 .alongWith(this.elevator.moveToPositionCommand())
-                .alongWith(this.head.magicgocCommand(headkeep))
+                .alongWith(this.head.magicgocCommand(coarlheadintake))
+            );
+        }
+        public Command alagekeep(){
+            return Commands.sequence(
+                Commands.runOnce(() -> this.setLevel(0), this),
+                this.arm.moveToCommand(armkeep)
+                .alongWith(this.elevator.moveToPositionCommand())
+                .andThen(this.head.magicgocCommand(coarlheadintake))
             );
         }
         public Command Elevatorgo(){
@@ -77,8 +118,9 @@ public class Superstructure extends SubsystemBase {
         }
         public Command CanL4levelput(){
             return Commands.sequence(
+                this.elevator.waitsetcmd(),
                 this.arm.moveToCommand(this.Armchoose[0])
-                .alongWith(this.head.magicgocCommand(headintake))
+                .alongWith(this.head.magicgocCommand(headLevel[0]))
                 .alongWith(this.elevator.moveToPositionCommand()),
                 new WaitUntilCommand(() -> this.elevator.atgoal()),
                 this.head.magicgocCommand(headputcoral)
@@ -87,15 +129,16 @@ public class Superstructure extends SubsystemBase {
 
         public Command CannotL4levelput(){
             return Commands.sequence(
+                this.elevator.waitsetcmd(),
                 this.arm.moveToCommand(this.Armchoose[1])
-                .alongWith(this.head.magicgocCommand(headintake))
+                .alongWith(this.head.magicgocCommand(headLevel[1]))
                 .alongWith(this.elevator.moveToPositionCommand())
             );
         }
         public Command putCoral() {
             return Commands.sequence(
                 this.head.intakebackexecute().until(() -> this.head.isCoralout()),
-                this.allkeep()
+                this.coralkeep()
             );
         }
 
@@ -118,11 +161,10 @@ public class Superstructure extends SubsystemBase {
     }
     public Command levelCommand(int whatLevel) {
         return Commands.sequence(
-            Commands.runOnce(() -> this.elevator.setLevel(whatLevel))
+            Commands.runOnce(() -> this.elevator.setLevelwait(whatLevel))
         );
     }
     public void setLevel(int Level){
-        this.Level = Level;
         this.elevator.setLevel(Level);
     }
     public void stopMotor(){
@@ -137,5 +179,6 @@ public class Superstructure extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Level", this.Level);
+        SmartDashboard.putBoolean("setintake", this.coraloralage);
     }
 }

@@ -29,7 +29,7 @@ public class Driver extends XboxController {
         return new Trigger(this::getputTrigger);
     }
     public boolean getputTrigger() {
-        return this.getLeftTriggerAxis() >= 0.3 ? true : false;
+        return this.getRightTriggerAxis() >= 0.3 ? true : false;
     }
     public Trigger Leftgo(){
         return new Trigger(this::getLeftBumperButton);

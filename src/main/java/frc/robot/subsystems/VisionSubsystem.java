@@ -64,7 +64,7 @@ public class VisionSubsystem extends SubsystemBase {
         if(goodLeftOV() == null){
             return;
         }
-        swerve.resetOdometry(goodOV());
+        // swerve.resetOdometry(goodOV());
     }
 
     public Pose2d goodLeftOV() {

@@ -7,7 +7,6 @@ public class Controller extends XboxController {
     public Controller() {
         super(1);
     }
-
     public Trigger L4() {
         return new Trigger(this::getYButton);
     }
@@ -20,7 +19,10 @@ public class Controller extends XboxController {
     public Trigger L1(){
         return new Trigger(this::getAButton);
     }
-    public Trigger go(){
+    public Trigger coral(){
         return new Trigger(this::getRightBumperButton);
+    }
+    public Trigger alage(){
+        return new Trigger(this::getLeftBumperButton);
     }
 }

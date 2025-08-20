@@ -44,7 +44,7 @@ public class Elevator extends SubsystemBase {
     private final TalonFX follow = new TalonFX(23);
     private final double ratio = 0.28;
     private final double metersPerRotation = 0.03494 * 2 * 100;
-    private final double[] Levelmeter = {5.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100 ,0.0, 0.0 }; // 初始， L1 , L2
+    private final double[] Levelmeter = {2.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100 ,0.0, 0.0 }; // 初始， L1 , L2
                                                                                                           // , L3 , L4 ,
                                                                                                           // alage1 ,
                                                                                                           // alage2
@@ -65,6 +65,7 @@ public class Elevator extends SubsystemBase {
                     },
                     null,
                     this));
+    public int Level;
 
     public Elevator() {
         pidController.setTolerance(3, 0.05);
@@ -114,7 +115,17 @@ public class Elevator extends SubsystemBase {
             pidController.setGoal(Levelmeter[level]);
         }
     }
-
+    public void setLevelwait(int level) {
+        if (level >= 0 && level < Levelmeter.length) {
+            this.Level = level;
+        }
+    }
+    public void waitset(){
+        pidController.setGoal(Levelmeter[Level]);
+    }
+    public Command waitsetcmd(){
+        return runOnce(() -> this.waitset());
+    }
     public double Magiclevel() {
         return this.pidController.getGoal().position;
     }
@@ -138,8 +149,6 @@ public class Elevator extends SubsystemBase {
             double feedforwardVoltage = ElevatorFeedforward.calculate(this.encoder(),
                     pidController.getSetpoint().velocity);
             setVoltage(feedbackVoltage + feedforwardVoltage);
-            SmartDashboard.putNumber("ELEsetout", feedbackVoltage + feedforwardVoltage);
-
         });
     }
 
@@ -200,7 +209,5 @@ public class Elevator extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putBoolean("atgoal", this.atgoal());
-        SmartDashboard.putNumber("goal", this.pidController.getGoal().position);
-        SmartDashboard.putNumber("Eleencoder", this.encoder());
     }
 }

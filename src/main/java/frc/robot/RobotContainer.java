@@ -58,20 +58,24 @@ public class RobotContainer {
     this.controller.L4()
         .onTrue(this.Superstructure.levelCommand(4));
     this.driver.Intake()
-        .onTrue(
-            this.Superstructure.intakedown())
-        .onFalse(this.Superstructure.allkeep());
-    
-    this.driver.Intake()
-        .onTrue(
-            this.Superstructure.intakedown());
+        .whileTrue(
+            this.Superstructure.coralintakedown())
+        .onFalse(this.Superstructure.coralkeep().andThen(this.Head.intakestopCmd()));
     this.driver.restgryo()
         .onTrue(this.Swerve.resetGyro());
+    this.controller.coral()
+        .onTrue(this.Superstructure.setcmd(0));
+        this.controller.alage()
+        .onTrue(this.Superstructure.setcmd(1));
+    this.driver.Leftgo()
+        .onTrue(this.Superstructure.Elevatorgo());
+    this.driver.put()
+        .onTrue(this.Superstructure.putCoral());
     
     // this.driver.put()
     //     .onTrue(this.Superstructure.Elevatorgo());
-    this.controller.go()
-        .onTrue(this.Superstructure.test());
+    // this.controller.go()
+    //     .onTrue(this.Superstructure.test());
       // this.controller.L3()
       //     .onTrue(this.Elevator.startCommand());
       // this.controller.L2()
