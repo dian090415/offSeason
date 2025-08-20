@@ -44,15 +44,15 @@ public class Elevator extends SubsystemBase {
     private final TalonFX follow = new TalonFX(23);
     private final double ratio = 0.28;
     private final double metersPerRotation = 0.03494 * 2 * 100;
-    private final double[] Levelmeter = { 0.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100 ,0.0, 0.0 }; // 初始， L1 , L2
+    private final double[] Levelmeter = {5.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100 ,0.0, 0.0 }; // 初始， L1 , L2
                                                                                                           // , L3 , L4 ,
                                                                                                           // alage1 ,
                                                                                                           // alage2
 
-    private final TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(550,
-            500);
-    private final ProfiledPIDController pidController = new ProfiledPIDController(0.65, 0, 0.015, m_constraints);
-    private final ElevatorFeedforward ElevatorFeedforward = new ElevatorFeedforward(0.0, 0.0, 0.0, 0.0);//0.13218, 0.0, 0.056884, 0.05076
+    private final TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(200,
+            250);
+    private final ProfiledPIDController pidController = new ProfiledPIDController(0.75, 0, 0.002, m_constraints);
+    private final ElevatorFeedforward ElevatorFeedforward = new ElevatorFeedforward(0.13218, 0.0, 0.0081402, 0.0072639);//0.13218, 0.0, 0.056884, 0.05076
 
     private final VoltageOut voltagRequire = new VoltageOut(0.0);
     private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
@@ -67,7 +67,7 @@ public class Elevator extends SubsystemBase {
                     this));
 
     public Elevator() {
-        pidController.setTolerance(0.2, 0.05);
+        pidController.setTolerance(3, 0.05);
         this.main.getConfigurator().setPosition(0.0);
         this.follow.getConfigurator().setPosition(0.0);
         this.Config();
@@ -79,22 +79,10 @@ public class Elevator extends SubsystemBase {
         // in init function
         var talonFXConfigs = new TalonFXConfiguration();
 
-        // set slot 0 gains
-        var slot0Configs = talonFXConfigs.Slot0;
-        slot0Configs.kS = 0.13218; // Add 0.25 V output to overcome static friction
-        slot0Configs.kV = 0.056884; // A velocity target of 1 rps results in 0.12 V output
-        slot0Configs.kA = 0.05076; // An acceleration of 1 rps/s requires 0.01 V output
-        slot0Configs.kP = 0.11; // An error of 1 rps results in 0.11 V output
-        slot0Configs.kI = 0; // no output for integrated error
-        slot0Configs.kD = 0; // no output for error derivative
-
-        // set Motion Magic Velocity settings
-        var motionMagicConfigs = talonFXConfigs.MotionMagic;
-        motionMagicConfigs.MotionMagicAcceleration = 400; // Target acceleration of 400 rps/s (0.25 seconds to max)
-        motionMagicConfigs.MotionMagicJerk = 4000; // Target jerk of 4000 rps/s/s (0.1 seconds)
-
         // Brake 模式
         talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+
 
         // 馬達正反轉
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -125,7 +113,6 @@ public class Elevator extends SubsystemBase {
         if (level >= 0 && level < Levelmeter.length) {
             pidController.setGoal(Levelmeter[level]);
         }
-        SmartDashboard.putNumber("Level", level);
     }
 
     public double Magiclevel() {
@@ -159,14 +146,7 @@ public class Elevator extends SubsystemBase {
     public Command moveToPositionCommand() {
         return Commands.sequence(
                 restandset(),
-                goalto()
-                        .until(() -> pidController.atGoal()))
-                .withTimeout(2);
-    }
-    public Command moveTo(){
-        return Commands.sequence(
-            this.moveToPositionCommand(),
-            this.keepCommand());
+                goalto());
     } 
 
     public Command restandset() {
@@ -175,15 +155,8 @@ public class Elevator extends SubsystemBase {
         });
     }
 
-    public Command keepCommand() {
-        return runEnd(
-            () -> {
-                double pidOutput = pidController.calculate(this.encoder(), this.encoder());
-                double ff = ElevatorFeedforward.calculate(0.0);
-                main.setVoltage(pidOutput + ff);
-            },
-            () -> main.setVoltage(0.0) // 離開時停止
-        );
+    public Command holdCurrentPositionCommand() {
+        return runOnce(() -> pidController.setGoal(this.encoder())).andThen(this.moveToPositionCommand());
     }
 
     public boolean atgoal() {

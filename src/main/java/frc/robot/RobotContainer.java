@@ -1,12 +1,15 @@
 
 package frc.robot;
 
+import org.photonvision.simulation.VisionSystemSim;
+
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Head;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.Drivetrain.SwerveSubsystem;
 import frc.robot.commands.ArmCmd;
 import frc.robot.commands.DriveCmd;
@@ -16,9 +19,11 @@ import frc.robot.commands.HeadCmd;
 public class RobotContainer {
 
   private final Controller controller = new Controller();
+  private final Driver driver = new Driver();
 
   private final Elevator Elevator = new Elevator();
   private final SwerveSubsystem Swerve = new SwerveSubsystem();
+  private final VisionSubsystem visionSubsystem = new VisionSubsystem(Swerve);
   private final Arm arm = new Arm();
   private final Head Head = new Head();
   private final Superstructure Superstructure = new Superstructure(arm, Elevator, Head);
@@ -30,15 +35,16 @@ public class RobotContainer {
   public RobotContainer() {
     this.Swerve.setDefaultCommand(
         new DriveCmd(Swerve,
-            () -> -this.controller.getLeftY(),
-            () -> this.controller.getLeftX(),
-            () -> this.controller.getRightX(),
-            () -> false));
+            () -> -this.driver.getLeftY(),
+            () -> this.driver.getLeftX(),
+            () -> this.driver.getRightX(),
+            () -> true));
 
     this.Elevator.setDefaultCommand(this.ElevatorCmd);
     this.Head.setDefaultCommand(this.HeadCmd);
     this.arm.setDefaultCommand(this.armCmd);
     this.configBindings();
+    visionSubsystem.periodic();
 
   }
 
@@ -51,8 +57,21 @@ public class RobotContainer {
         .onTrue(this.Superstructure.levelCommand(3));
     this.controller.L4()
         .onTrue(this.Superstructure.levelCommand(4));
+    this.driver.Intake()
+        .onTrue(
+            this.Superstructure.intakedown())
+        .onFalse(this.Superstructure.allkeep());
+    
+    this.driver.Intake()
+        .onTrue(
+            this.Superstructure.intakedown());
+    this.driver.restgryo()
+        .onTrue(this.Swerve.resetGyro());
+    
+    // this.driver.put()
+    //     .onTrue(this.Superstructure.Elevatorgo());
     this.controller.go()
-        .onTrue(this.Superstructure.movetoLevel());
+        .onTrue(this.Superstructure.test());
       // this.controller.L3()
       //     .onTrue(this.Elevator.startCommand());
       // this.controller.L2()

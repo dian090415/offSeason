@@ -28,7 +28,8 @@ public class HeadCmd extends Command {
 
 	@Override
 	public void end(boolean interrupted) {
-		this.Head.stop();
+		this.Head.headstop();
+		this.Head.intakestop();
 	}
 
 	@Override

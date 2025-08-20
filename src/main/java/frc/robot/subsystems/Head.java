@@ -10,17 +10,21 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class Head extends SubsystemBase {
-    private final MotionMagicVoltage head = new MotionMagicVoltage(0.0);
+    private final MotionMagicVoltage headvolt = new MotionMagicVoltage(0.0);
 
-    private final TalonFX main = new TalonFX(20);
+    private final TalonFX head = new TalonFX(20);
     private final TalonFX intake = new TalonFX(21);
     private final double metersPerangle = (1/0.0263671875) * (1/360);// 馬達一圈轉0.026圈*360
     private final MotionMagicExpoVoltage m_request = new MotionMagicExpoVoltage(0);
+    private final AnalogInput IRSensor = new AnalogInput(0);
 
     public Head() {
         this.Config();
@@ -55,29 +59,54 @@ public class Head extends SubsystemBase {
                 .withSupplyCurrentLimit(50.0);
         talonFXConfigs.Feedback.SensorToMechanismRatio = metersPerangle;
 
-        main.getConfigurator().apply(talonFXConfigs);
+        head.getConfigurator().apply(talonFXConfigs);
         intake.getConfigurator().apply(talonFXConfigs);
     }
 
     public void Magicgo(double Position) {
-        main.setControl(m_request.withPosition(Position));
+        head.setControl(m_request.withPosition(Position));
     }
 
     public Command magicgocCommand(double Position){
         return run(() -> this.Magicgo(Position));
     }
-    public Command intake(){
-        return run(() -> this.intake.setVoltage(5));
+    public Command intakeexecute() {
+        return Commands.sequence(
+                Commands.run(() -> this.intakexcute(5), this),
+                new WaitCommand(0.5),
+                Commands.run(() -> this.intakexcute(7), this),
+                new WaitCommand(0.5)
+        );
     }
-    public void stop() {
-        this.main.stopMotor();
+    public Command intakebackexecute() {
+        return Commands.runEnd(() -> this.intakebackexcute(), this::intakestop, this);
+    }
+    public void intakestop() {
         this.intake.stopMotor();
     }
-    public void setVoltage(double volt){
-        this.main.setVoltage(volt);
+    public void headstop(){
+        this.head.stopMotor();
     }
-        @Override
+    public void intakexcute(double volt){
+        this.intake.setVoltage(volt);
+    }
+    public void  intakebackexcute(){
+        this.intake.setVoltage(-1);
+    }
+    public void intakesetVoltage(double volt){
+        this.intake.setVoltage(volt);
+    }
+
+    public boolean isCoralIn() {
+        return this.IRSensor.getVoltage() <= 1.0 ? true : false;
+    }
+    public boolean isCoralout() {
+        return this.IRSensor.getVoltage() >= 1.0 ? false : true;
+    }
+    
+    @Override
     public void periodic() {
-        SmartDashboard.putNumber("headencoder", this.main.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("headencoder", this.head.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("IRValue", this.IRSensor.getVoltage());
     }
 }

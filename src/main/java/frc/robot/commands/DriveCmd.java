@@ -67,14 +67,14 @@ public class DriveCmd extends Command {
 
         if (fieldOrientedFunc.get()) {
             // 場地相對位置
-            // this.swerveSubsystem.drive(xSpd, ySpd, turningSpd, true);
+            this.swerveSubsystem.drive(-xSpd, -ySpd, turningSpd, true);
         } else {
             // 機器絕對位置
             chassisSpeeds = new ChassisSpeeds(xSpd, ySpd, turningSpd);
             // 5. 將底盤速度轉換為全向輪狀態
             SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
             // 6. 輸出至全向輪
-            // swerveSubsystem.setModuleStates(moduleStates);
+            swerveSubsystem.setModuleStates(moduleStates);
         }
 
     }
