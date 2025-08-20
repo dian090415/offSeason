@@ -79,7 +79,7 @@ public class Head extends SubsystemBase {
         );
     }
     public Command alagelintakeexecute() {
-        return Commands.run(() -> this.intakexcute(7), this);
+        return Commands.run(() -> this.intakexcute(-7), this);
     }
     public Command intakebackexecute() {
         return Commands.runEnd(() -> this.intakebackexcute(), this::intakestop, this);
@@ -88,7 +88,7 @@ public class Head extends SubsystemBase {
         return Commands.runEnd(() -> this.intakeput(), this::intakestop, this);
     }
     public Command intakestopCmd(){
-        return Commands.runOnce(() -> this.intakestop(), this);
+        return Commands.run(() -> this.intakestop(), this);
     }
     public void intakestop() {
         this.intake.setVoltage(0.0);

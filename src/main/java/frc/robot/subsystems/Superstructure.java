@@ -35,6 +35,7 @@ public class Superstructure extends SubsystemBase {
     public int Level;
     public boolean invertarm;
     public boolean coraloralage;
+    public boolean highlow;
     
         public Superstructure(Arm arm, Elevator elevator, Head head) {
             this.elevator = elevator;
@@ -137,11 +138,50 @@ public class Superstructure extends SubsystemBase {
         }
         public Command putCoral() {
             return Commands.sequence(
-                this.head.intakebackexecute().until(() -> this.head.isCoralout()),
+                this.head.intakeputcmd().withTimeout(1),
                 this.coralkeep()
             );
         }
+        public Command alage(){
+            if(highlow){
+                return highalage();
+            }else{
+                return lowalage();
+            }
+        }
+        public Command sethighlowcmd(double num){
+            return runOnce(() -> this.setalagehighlow(num));
+        }
+        public void setalagehighlow(double num){
+            if(num == 1){
+                this.highlow = true;
+            }else if(num == 0){
+                this.highlow = false;
+            }
+        }
 
+        public Command highalage(){
+            return Commands.sequence(
+                Commands.runOnce(() -> this.setLevel(5), this),
+                this.arm.moveToCommand(this.Armchoose[0])
+                .alongWith(this.head.magicgocCommand(headLevel[0]))
+                .alongWith(this.elevator.moveToPositionCommand()),
+                new WaitUntilCommand(() -> this.elevator.atgoal()),
+                this.head.magicgocCommand(headputcoral),
+                this.head.alagelintakeexecute()
+            );
+        }
+        public Command lowalage(){
+            return Commands.sequence(
+                Commands.runOnce(() -> this.setLevel(6), this),
+                this.arm.moveToCommand(this.Armchoose[0])
+                .alongWith(this.head.magicgocCommand(headLevel[0]))
+                .alongWith(this.elevator.moveToPositionCommand()),
+                new WaitUntilCommand(() -> this.elevator.atgoal()),
+                this.head.magicgocCommand(headputcoral),
+                this.head.alagelintakeexecute()
+            );
+        }
 
     //---------------head安全處理-------------
     public double headLevel(int Level){

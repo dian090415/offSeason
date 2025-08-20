@@ -50,7 +50,8 @@ public class RobotContainer {
 
   public void configBindings() {
     this.controller.L1()
-        .onTrue(this.Superstructure.levelCommand(1));
+       
+    .onTrue(this.Superstructure.levelCommand(1));
     this.controller.L2()
         .onTrue(this.Superstructure.levelCommand(2));
     this.controller.L3()
@@ -60,7 +61,7 @@ public class RobotContainer {
     this.driver.Intake()
         .whileTrue(
             this.Superstructure.coralintakedown())
-        .onFalse(this.Superstructure.coralkeep().andThen(this.Head.intakestopCmd()));
+        .onFalse(this.Superstructure.coralkeep());
     this.driver.restgryo()
         .onTrue(this.Swerve.resetGyro());
     this.controller.coral()
@@ -71,7 +72,13 @@ public class RobotContainer {
         .onTrue(this.Superstructure.Elevatorgo());
     this.driver.put()
         .onTrue(this.Superstructure.putCoral());
-    
+    this.driver.Rightgo()
+        .onTrue(this.Superstructure.alage());
+    this.controller.high()
+        .onTrue(this.Superstructure.sethighlowcmd(1));
+    this.controller.low()
+        .onTrue(this.Superstructure.sethighlowcmd(0));
+
     // this.driver.put()
     //     .onTrue(this.Superstructure.Elevatorgo());
     // this.controller.go()

@@ -44,7 +44,7 @@ public class Elevator extends SubsystemBase {
     private final TalonFX follow = new TalonFX(23);
     private final double ratio = 0.28;
     private final double metersPerRotation = 0.03494 * 2 * 100;
-    private final double[] Levelmeter = {2.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100 ,0.0, 0.0 }; // 初始， L1 , L2
+    private final double[] Levelmeter = {5.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100 ,30.98, 50.98  }; // 初始， L1 , L2
                                                                                                           // , L3 , L4 ,
                                                                                                           // alage1 ,
                                                                                                           // alage2

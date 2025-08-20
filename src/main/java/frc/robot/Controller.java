@@ -25,4 +25,16 @@ public class Controller extends XboxController {
     public Trigger alage(){
         return new Trigger(this::getLeftBumperButton);
     }
+    public boolean gethigh() {
+        return this.getLeftTriggerAxis() >= 0.3 ? true : false;
+    }
+    public Trigger high(){
+        return new Trigger(this::gethigh);
+    }
+    public boolean getlow() {
+        return this.getRightTriggerAxis() >= 0.3 ? true : false;
+    }
+    public Trigger low(){
+        return new Trigger(this::gethigh);
+    }
 }
