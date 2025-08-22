@@ -50,7 +50,6 @@ public class RobotContainer {
 
   public void configBindings() {
     this.controller.L1()
-       
     .onTrue(this.Superstructure.levelCommand(1));
     this.controller.L2()
         .onTrue(this.Superstructure.levelCommand(2));
@@ -60,24 +59,30 @@ public class RobotContainer {
         .onTrue(this.Superstructure.levelCommand(4));
     this.driver.Intake()
         .whileTrue(
-            this.Superstructure.coralintakedown())
+            this.Superstructure.intake())
         .onFalse(this.Superstructure.coralkeep());
     this.driver.restgryo()
         .onTrue(this.Swerve.resetGyro());
     this.controller.coral()
-        .onTrue(this.Superstructure.setcmd(0));
-        this.controller.alage()
         .onTrue(this.Superstructure.setcmd(1));
+        this.controller.alage()
+        .onTrue(this.Superstructure.setcmd(0));
     this.driver.Leftgo()
         .onTrue(this.Superstructure.Elevatorgo());
     this.driver.put()
         .onTrue(this.Superstructure.putCoral());
     this.driver.Rightgo()
-        .onTrue(this.Superstructure.alage());
+        .onTrue(this.Superstructure.alageintakedown())
+        .onFalse(this.Superstructure.alagekeep());
     this.controller.high()
-        .onTrue(this.Superstructure.sethighlowcmd(1));
+        .onTrue(this.Superstructure.highalage())
+        .onFalse(this.Superstructure.alagekeep());
     this.controller.low()
-        .onTrue(this.Superstructure.sethighlowcmd(0));
+        .onTrue(this.Superstructure.lowalage())
+        .onFalse(this.Superstructure.alagekeep());
+    this.driver.net()
+        .onTrue(this.Superstructure.net())
+        .onFalse(this.Superstructure.coralkeep());
 
     // this.driver.put()
     //     .onTrue(this.Superstructure.Elevatorgo());

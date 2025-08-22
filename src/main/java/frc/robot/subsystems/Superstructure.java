@@ -25,14 +25,15 @@ public class Superstructure extends SubsystemBase {
     private final double Headsafemeter = 0.0;//TODO
     private final double[] headLevel = {19.01025390625};//TODO 預設
     private final double[] Armchoose = {27.39599609375 ,25.2978515625};//可以L4，不行
-    public double headputcoral = 0.0;
+    public double headputcoral = 1.0;
     public double coarlheadintake = 5.44677734375;
     public double alageheadintake = 3.0;
     public double headkeep = 1.0;
-    public double coralarmdown = -0.42861328125;
-    public double alagearmdown = 5.0;
+    public double coralarmdown = -0.42861328125
+    ;
+    public double alagearmdown = 0.0;
     public double armkeep = 26.4033203125;
-    public int Level;
+    public int eleLevel;
     public boolean invertarm;
     public boolean coraloralage;
     public boolean highlow;
@@ -41,9 +42,9 @@ public class Superstructure extends SubsystemBase {
             this.elevator = elevator;
             this.arm = arm;
             this.head = head;
-            this.Level = 0;
+            this.eleLevel = 0;
             this.invertarm = false;
-            this.coraloralage = false;
+            this.coraloralage = true;
         }
     
         public Command test() {
@@ -85,7 +86,6 @@ public class Superstructure extends SubsystemBase {
         public Command alageintakedown(){
             return Commands.sequence(
                 Commands.runOnce(() -> this.setLevel(0), this),
-
                 Commands.parallel(
                 this.arm.moveToCommand(alagearmdown),
                 this.head.magicgocCommand(alageheadintake),
@@ -119,7 +119,7 @@ public class Superstructure extends SubsystemBase {
         }
         public Command CanL4levelput(){
             return Commands.sequence(
-                this.elevator.waitsetcmd(),
+                Commands.runOnce(() -> this.setLevel(eleLevel), this),
                 this.arm.moveToCommand(this.Armchoose[0])
                 .alongWith(this.head.magicgocCommand(headLevel[0]))
                 .alongWith(this.elevator.moveToPositionCommand()),
@@ -130,7 +130,7 @@ public class Superstructure extends SubsystemBase {
 
         public Command CannotL4levelput(){
             return Commands.sequence(
-                this.elevator.waitsetcmd(),
+                Commands.runOnce(() -> this.setLevel(eleLevel), this),
                 this.arm.moveToCommand(this.Armchoose[1])
                 .alongWith(this.head.magicgocCommand(headLevel[1]))
                 .alongWith(this.elevator.moveToPositionCommand())
@@ -142,44 +142,37 @@ public class Superstructure extends SubsystemBase {
                 this.coralkeep()
             );
         }
-        public Command alage(){
-            if(highlow){
-                return highalage();
-            }else{
-                return lowalage();
-            }
-        }
-        public Command sethighlowcmd(double num){
-            return runOnce(() -> this.setalagehighlow(num));
-        }
-        public void setalagehighlow(double num){
-            if(num == 1){
-                this.highlow = true;
-            }else if(num == 0){
-                this.highlow = false;
-            }
-        }
-
         public Command highalage(){
             return Commands.sequence(
                 Commands.runOnce(() -> this.setLevel(5), this),
-                this.arm.moveToCommand(this.Armchoose[0])
-                .alongWith(this.head.magicgocCommand(headLevel[0]))
-                .alongWith(this.elevator.moveToPositionCommand()),
-                new WaitUntilCommand(() -> this.elevator.atgoal()),
-                this.head.magicgocCommand(headputcoral),
+                Commands.parallel(
+                    this.arm.moveToCommand(this.Armchoose[0]),
+                    this.head.magicgocCommand(headLevel[0]),
+                    this.elevator.moveToPositionCommand()
+                    ).until(() -> this.elevator.atgoal()),
                 this.head.alagelintakeexecute()
             );
         }
         public Command lowalage(){
             return Commands.sequence(
                 Commands.runOnce(() -> this.setLevel(6), this),
-                this.arm.moveToCommand(this.Armchoose[0])
-                .alongWith(this.head.magicgocCommand(headLevel[0]))
-                .alongWith(this.elevator.moveToPositionCommand()),
-                new WaitUntilCommand(() -> this.elevator.atgoal()),
-                this.head.magicgocCommand(headputcoral),
-                this.head.alagelintakeexecute()
+                Commands.parallel(
+                    this.arm.moveToCommand(this.Armchoose[0]),
+                    this.head.magicgocCommand(headLevel[0]),
+                    this.elevator.moveToPositionCommand()
+                    ).until(() -> this.elevator.atgoal()),
+               this.head.alagelintakeexecute()
+            );
+        }
+        public Command net(){
+            return Commands.sequence(
+                Commands.runOnce(() -> this.setLevel(4), this),
+                Commands.parallel(
+                    this.arm.moveToCommand(this.Armchoose[0]),
+                    this.head.magicgocCommand(coarlheadintake),
+                    this.elevator.moveToPositionCommand()
+                    ).until(() -> this.elevator.atgoal()),
+                this.head.alageput()
             );
         }
 
@@ -200,9 +193,10 @@ public class Superstructure extends SubsystemBase {
         return new WaitUntilCommand(() -> this.elevator.atgoal());
     }
     public Command levelCommand(int whatLevel) {
-        return Commands.sequence(
-            Commands.runOnce(() -> this.elevator.setLevelwait(whatLevel))
-        );
+        return Commands.runOnce(() -> this.seteleLevel(whatLevel));
+    }
+    public void seteleLevel(int Level){
+        this.eleLevel = Level;
     }
     public void setLevel(int Level){
         this.elevator.setLevel(Level);
@@ -218,7 +212,8 @@ public class Superstructure extends SubsystemBase {
     }
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Level", this.Level);
+        SmartDashboard.putNumber("Level", this.eleLevel);
         SmartDashboard.putBoolean("setintake", this.coraloralage);
+        SmartDashboard.putBoolean("highlow", highlow);
     }
 }

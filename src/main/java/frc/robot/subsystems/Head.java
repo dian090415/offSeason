@@ -72,14 +72,17 @@ public class Head extends SubsystemBase {
     }
     public Command coarlintakeexecute() {
         return Commands.sequence(
-                Commands.run(() -> this.intakexcute(5), this),
-                new WaitCommand(0.5),
+                Commands.run(() -> this.intakexcute(4), this),
+                new WaitCommand(0.75),
                 Commands.run(() -> this.intakexcute(7), this),
-                new WaitCommand(0.5)
+                new WaitCommand(0.75)
         );
     }
     public Command alagelintakeexecute() {
-        return Commands.run(() -> this.intakexcute(-7), this);
+        return Commands.run(() -> this.intakexcute(-7),this);
+    }
+    public Command alageput() {
+        return Commands.runEnd(() -> this.intakexcute(7), this::intakestop, this);
     }
     public Command intakebackexecute() {
         return Commands.runEnd(() -> this.intakebackexcute(), this::intakestop, this);
@@ -103,7 +106,7 @@ public class Head extends SubsystemBase {
         this.intake.setVoltage(-1);
     }
     public void  intakeput(){
-        this.intake.setVoltage(-7);
+        this.intake.setVoltage(-6);
     }
     public void intakesetVoltage(double volt){
         this.intake.setVoltage(volt);

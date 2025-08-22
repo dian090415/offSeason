@@ -35,6 +35,6 @@ public class Controller extends XboxController {
         return this.getRightTriggerAxis() >= 0.3 ? true : false;
     }
     public Trigger low(){
-        return new Trigger(this::gethigh);
+        return new Trigger(this::getlow);
     }
 }

@@ -35,9 +35,12 @@ public class Driver extends XboxController {
         return new Trigger(this::getLeftBumperButton);
     }
     public Trigger Rightgo(){
-        return new Trigger(this::getLeftBumperButton);
+        return new Trigger(this::getRightBumperButton);
     }
     public Trigger restgryo(){
         return new Trigger(this::getXButton);
+    }
+    public Trigger net(){
+        return new Trigger(this::getYButton);
     }
 }

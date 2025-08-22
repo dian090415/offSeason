@@ -44,7 +44,7 @@ public class Elevator extends SubsystemBase {
     private final TalonFX follow = new TalonFX(23);
     private final double ratio = 0.28;
     private final double metersPerRotation = 0.03494 * 2 * 100;
-    private final double[] Levelmeter = {5.0, 0.0, 0.00816 * 100, 0.4098 * 100, 1.032 * 100 ,30.98, 50.98  }; // 初始， L1 , L2
+    private final double[] Levelmeter = {5.0, 0.0, 0.00816 * 100, (0.4098 * 100)-5, (1.032 * 100)-5 ,30.98, 50.98}; // 初始， L1 , L2
                                                                                                           // , L3 , L4 ,
                                                                                                           // alage1 ,
                                                                                                           // alage2
@@ -52,7 +52,7 @@ public class Elevator extends SubsystemBase {
     private final TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(200,
             250);
     private final ProfiledPIDController pidController = new ProfiledPIDController(0.75, 0, 0.002, m_constraints);
-    private final ElevatorFeedforward ElevatorFeedforward = new ElevatorFeedforward(0.13218, 0.0, 0.0081402, 0.0072639);//0.13218, 0.0, 0.056884, 0.05076
+    private final ElevatorFeedforward ElevatorFeedforward = new ElevatorFeedforward(0.0, 0.0, 0.0, 0.0);//0.13218, 0.0, 0.0081402, 0.0072639
 
     private final VoltageOut voltagRequire = new VoltageOut(0.0);
     private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
@@ -111,14 +111,11 @@ public class Elevator extends SubsystemBase {
     }
 
     public void setLevel(int level) {
-        if (level >= 0 && level < Levelmeter.length) {
             pidController.setGoal(Levelmeter[level]);
-        }
     }
-    public void setLevelwait(int level) {
-        if (level >= 0 && level < Levelmeter.length) {
-            this.Level = level;
-        }
+    public void setLevelwait(int level) {            
+        this.Level = level;
+        SmartDashboard.putNumber("Level", level);
     }
     public void waitset(){
         pidController.setGoal(Levelmeter[Level]);
@@ -209,5 +206,6 @@ public class Elevator extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putBoolean("atgoal", this.atgoal());
+        SmartDashboard.putNumber("goal", this.pidController.getGoal().position);
     }
 }
