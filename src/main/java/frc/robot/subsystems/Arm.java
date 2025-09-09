@@ -14,8 +14,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-
 public class Arm extends SubsystemBase {
     private final CANcoder canEncoder = new CANcoder(30);
     private final TalonFX lMain = new TalonFX(24);
