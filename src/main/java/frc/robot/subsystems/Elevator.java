@@ -21,6 +21,7 @@ import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.PerUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Per;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -82,6 +83,7 @@ public class Elevator extends SubsystemBase {
 
     private final TalonFX main = new TalonFX(22);
     private final TalonFX follow = new TalonFX(23);
+    
 
     // ---------------------我寫的廢物code爛就是爛沒藉口-----------------------------------------
     private final double ratio = 0.28;
@@ -132,7 +134,7 @@ public class Elevator extends SubsystemBase {
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
         talonFXConfigs.SoftwareLimitSwitch.withForwardSoftLimitEnable(true)
-                .withForwardSoftLimitThreshold(103.2)
+                .withForwardSoftLimitThreshold(15.12067461471358)
                 .withReverseSoftLimitEnable(true)
                 .withReverseSoftLimitThreshold(0.0);
 
@@ -170,15 +172,15 @@ public class Elevator extends SubsystemBase {
         return K_G * Math.sin(angleRadiansSupplier.getAsDouble()) + K_C;
     }
 
-    private void goToRotations(double motorRotations) {//輸入m
+    private void goToRotations(double motorRotations) {// 輸入m
         goalRotations = motorRotations;
         main.setControl(profileReq.withPosition(motorRotations).withFeedForward(getKGVolts()));
     }
 
-    public Command goToLength(DoubleSupplier length) {
-    return this.run(
-        () -> goToRotations(length.getAsDouble() * MOTOR_ROTATIONS_PER_METER));
-  }
+    public Command goToLength(Double length) {
+        return this.run(
+                () -> goToRotations(length* MOTOR_ROTATIONS_PER_METER));
+    }
 
     // -------------profiled pid輸出模式--------------------------------
     public double goal() {
@@ -290,5 +292,8 @@ public class Elevator extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putBoolean("atgoal", this.atgoal());
         SmartDashboard.putNumber("goal", this.pidController.getGoal().position);
+        if (DriverStation.isDisabled()) {
+            main.set(0);
+        }
     }
 }

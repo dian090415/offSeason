@@ -1,18 +1,39 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Main;
+
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.Degrees;
+
+import java.util.function.DoubleSupplier;
+
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meter;
 
 public class Arm extends SubsystemBase {
     private final CANcoder canEncoder = new CANcoder(30);
@@ -21,6 +42,18 @@ public class Arm extends SubsystemBase {
     private final TalonFX rMain = new TalonFX(27);
     private final TalonFX rFollow = new TalonFX(26);
     private final PIDController pidController = new PIDController(1.0, 0, 0);
+
+    // -----------------------------------新程式-------------------------------------------------
+
+    public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 79.3651 * 14.0 / 9.0;
+    public static final double ENCODER_OFFSET_ROTATIONS = 0.12109375 + 0.125; // = 0.24609375
+    public static final double K_V = 12.0 / (100 / MOTOR_ROTATIONS_PER_ARM_ROTATION);
+    public static final double K_A = 0.25 /* v/oldRot/s^2 */ * 9.0 / 14.0; /* newRot/oldRot */;
+    public static final Angle CCW_LIMIT = Degrees.of(110);
+    public static final Angle CW_LIMIT = Degrees.of(40);
+    private StatusSignal<Angle> m_angleSig = lMain.getPosition();
+    private double m_goalRotations;
+      private MotionMagicVoltage m_profileReq = new MotionMagicVoltage(0);
 
     // 你的機械比
     private final double ratio = 123.456789;
@@ -38,11 +71,11 @@ public class Arm extends SubsystemBase {
 
         // 設定 TalonFX
         configureMotors();
-
-        // 將 TalonFX 的位置與 CANcoder 對齊
-        double initialPosition = canEncoder.getPosition().getValueAsDouble() * ratio;
-        lMain.getConfigurator().setPosition(initialPosition);
+        CANcoderConfig();
     }
+
+
+//----------------------------------------------------新code---------------------------------------------------------------------------
 
     private void configureMotors() {
         // in init function
@@ -50,18 +83,16 @@ public class Arm extends SubsystemBase {
 
         // set slot 0 gains
         var slot0Configs = talonFXConfigs.Slot0;
-        slot0Configs.kS = 0.0; // Add 0.25 V output to overcome static friction
-        slot0Configs.kV = 0.0; // A velocity target of 1 rps results in 0.12 V output
-        slot0Configs.kA = 0.0; // An acceleration of 1 rps/s requires 0.01 V output
-        slot0Configs.kP = 0.325; // A position error of 2.5 rotations results in 12 V output
-        slot0Configs.kI = 0.0; // no output for integrated error
-        slot0Configs.kD = 0.0; // A velocity error of 1 rps results in 0.1 V output
+        slot0Configs.kS = 0.1; // Add 0.25 V output to overcome static friction
+        slot0Configs.kV = K_V; // A velocity target of 1 rps results in 0.12 V output
+        slot0Configs.kA = K_A; // An acceleration of 1 rps/s requires 0.01 V output
+        slot0Configs.kP = 140.0; // A position error of 2.5 rotations results in 12 V output
+        slot0Configs.kD = 0.4; // A velocity error of 1 rps results in 0.1 V output
+        slot0Configs.withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);// 使用閉迴路誤差的方向來決定 kS 正負號
 
-        // set Motion Magic Expo settings
-        var motionMagicConfigs = talonFXConfigs.MotionMagic;
-        motionMagicConfigs.MotionMagicCruiseVelocity = 0; // Unlimited cruise velocity
-        motionMagicConfigs.MotionMagicExpo_kV = 0.05; // kV is around 0.12 V/rps
-        motionMagicConfigs.MotionMagicExpo_kA = 0.01; // Use a slower kA of 0.1 V/(rps/s)
+        talonFXConfigs.MotionMagic
+                .withMotionMagicCruiseVelocity(0.5)// 巡航
+                .withMotionMagicAcceleration(0.66);// 加速度
 
         // 電流限制
         talonFXConfigs.CurrentLimits.withStatorCurrentLimitEnable(true)
@@ -75,12 +106,41 @@ public class Arm extends SubsystemBase {
         // 馬達正反轉
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
+        talonFXConfigs.Feedback
+                .withFeedbackRemoteSensorID(30)
+                .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+                .withSensorToMechanismRatio(1)
+                .withRotorToSensorRatio(MOTOR_ROTATIONS_PER_ARM_ROTATION);
+        talonFXConfigs.SoftwareLimitSwitch
+                .withForwardSoftLimitEnable(true)
+                .withForwardSoftLimitThreshold(CCW_LIMIT)
+                .withReverseSoftLimitThreshold(Degrees.of(1.34))
+                .withReverseSoftLimitEnable(true);
+        talonFXConfigs.CurrentLimits
+                .withSupplyCurrentLimitEnable(true)
+                .withSupplyCurrentLimit(40);
+
         // 套用設定
         lMain.getConfigurator().apply(talonFXConfigs);
         rMain.getConfigurator().apply(talonFXConfigs);
         lFollow.getConfigurator().apply(talonFXConfigs);
         rFollow.getConfigurator().apply(talonFXConfigs);
     }
+    public void CANcoderConfig(){
+      var CANcoderConfig = new CANcoderConfiguration();
+      CANcoderConfig.MagnetSensor.MagnetOffset = ENCODER_OFFSET_ROTATIONS;
+      CANcoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = Units.degreesToRotations(250);
+      CANcoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+      canEncoder.getConfigurator().apply(CANcoderConfig);
+    }
+
+    public double getAngleRotations() {
+        return m_angleSig.getValueAsDouble();
+      }
+    
+      public double getAngleRadians() {
+        return Units.rotationsToRadians(m_angleSig.getValueAsDouble());
+      }
 
     // Motion Magic 移動
     public void moveTo(double targetPosition) {
@@ -108,13 +168,37 @@ public class Arm extends SubsystemBase {
     public void stop() {
         lMain.stopMotor();
     }
-    public boolean armatgoal(double position){
-        if(Math.abs(position - this.encoder()) <= 2.5){
+
+    public boolean armatgoal(double position) {
+        if (Math.abs(position - this.encoder()) <= 2.5) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
+
+    public double getLengthKg() {
+        return MathUtil.interpolate(
+          MainPivotConstants.K_G_RETRACTED,
+          MainPivotConstants.K_G_EXTENDED,
+          MathUtil.inverseInterpolate(
+              ElevatorConstants.MIN_LENGTH.in(Meters),
+              ElevatorConstants.MAX_LENGTH.in(Meters),
+              getLengthMeters()));
+      }
+
+    public double getKgVolts() {
+        return Math.cos(getAngleRadians())
+            * getLengthKg();
+      }
+
+    public Command hold() {
+        return sequence(runOnce(() -> m_goalRotations = getAngleRotations()),
+          run(()->{
+            lMain.setControl(
+              m_profileReq.withPosition(m_goalRotations).withFeedForward(getKgVolts()));
+          }));
+      }
 
     @Override
     public void periodic() {

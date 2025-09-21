@@ -22,7 +22,7 @@ public class ArmCmd extends Command {
 	@Override
 	public void execute() {
 		double speed = MathUtil.applyDeadband(this.controller.getLeftY(),0.05) * 8;
-        this.Arm.setVoltage(speed);
+        // this.Arm.setVoltage(speed);
 	}
 
 	@Override

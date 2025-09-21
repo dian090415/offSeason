@@ -49,171 +49,172 @@ public class Superstructure extends SubsystemBase {
     
         public Command test() {
             return Commands.sequence(
-                this.elevator.moveToPositionCommand()
+                this.elevator.goToLength(1.0)
             );
         }
-        public void setcoralorintake(double num){
-            if(num == 1){
-                this.coraloralage = true;
-            }else if(num == 0){
-                this.coraloralage = false;
-            }
-        }
-        public Command setcmd(double num){
-            return runOnce(() -> this.setcoralorintake(num));
-        }
-        public Command intake(){
-            if(coraloralage){
-                return coralintakedown();
-            }else{
-                return alageintakedown();
-            }
-        }
+    //     }
+    //     public void setcoralorintake(double num){
+    //         if(num == 1){
+    //             this.coraloralage = true;
+    //         }else if(num == 0){
+    //             this.coraloralage = false;
+    //         }
+    //     }
+    //     public Command setcmd(double num){
+    //         return runOnce(() -> this.setcoralorintake(num));
+    //     }
+    //     public Command intake(){
+    //         if(coraloralage){
+    //             return coralintakedown();
+    //         }else{
+    //             return alageintakedown();
+    //         }
+    //     }
 
-        public Command coralintakedown(){
-            return Commands.sequence(
-                Commands.runOnce(() -> this.setLevel(0), this),
+    //     public Command coralintakedown(){
+    //         return Commands.sequence(
+    //             Commands.runOnce(() -> this.setLevel(0), this),
 
-                Commands.parallel(
-               this.arm.moveToCommand(coralarmdown),
-                this.head.magicgocCommand(coarlheadintake),
-                this.elevator.moveToPositionCommand()
-                ).until(() -> this.arm.armatgoal(coralarmdown)),
-                this.head.coarlintakeexecute().until(() -> this.head.isCoralIn()),
-                this.head.intakebackexecute().withTimeout(0.5)
-            ); 
-        }
-        public Command alageintakedown(){
-            return Commands.sequence(
-                Commands.runOnce(() -> this.setLevel(0), this),
-                Commands.parallel(
-                this.arm.moveToCommand(alagearmdown),
-                this.head.magicgocCommand(alageheadintake),
-                this.elevator.moveToPositionCommand()
-                ).until(() -> this.arm.armatgoal(alagearmdown)),
-                this.head.alagelintakeexecute()
-            );
-        }
-        public Command coralkeep(){
-            return Commands.sequence(
-                Commands.runOnce(() -> this.setLevel(0), this),
-                this.arm.moveToCommand(armkeep)
-                .alongWith(this.elevator.moveToPositionCommand())
-                .alongWith(this.head.magicgocCommand(coarlheadintake))
-            );
-        }
-        public Command alagekeep(){
-            return Commands.sequence(
-                Commands.runOnce(() -> this.setLevel(0), this),
-                this.arm.moveToCommand(armkeep)
-                .alongWith(this.elevator.moveToPositionCommand())
-                .andThen(this.head.magicgocCommand(coarlheadintake))
-            );
-        }
-        public Command Elevatorgo(){
-            if(invertarm){
-                return CannotL4levelput();
-            }else{
-                return CanL4levelput();
-            }
-        }
-        public Command CanL4levelput(){
-            return Commands.sequence(
-                Commands.runOnce(() -> this.setLevel(eleLevel), this),
-                this.arm.moveToCommand(this.Armchoose[0])
-                .alongWith(this.head.magicgocCommand(headLevel[0]))
-                .alongWith(this.elevator.moveToPositionCommand()),
-                new WaitUntilCommand(() -> this.elevator.atgoal()),
-                this.head.magicgocCommand(headputcoral)
-            );
-        }
+    //             Commands.parallel(
+    //            this.arm.moveToCommand(coralarmdown),
+    //             this.head.magicgocCommand(coarlheadintake),
+    //             this.elevator.moveToPositionCommand()
+    //             ).until(() -> this.arm.armatgoal(coralarmdown)),
+    //             this.head.coarlintakeexecute().until(() -> this.head.isCoralIn()),
+    //             this.head.intakebackexecute().withTimeout(0.5)
+    //         ); 
+    //     }
+    //     public Command alageintakedown(){
+    //         return Commands.sequence(
+    //             Commands.runOnce(() -> this.setLevel(0), this),
+    //             Commands.parallel(
+    //             this.arm.moveToCommand(alagearmdown),
+    //             this.head.magicgocCommand(alageheadintake),
+    //             this.elevator.moveToPositionCommand()
+    //             ).until(() -> this.arm.armatgoal(alagearmdown)),
+    //             this.head.alagelintakeexecute()
+    //         );
+    //     }
+    //     public Command coralkeep(){
+    //         return Commands.sequence(
+    //             Commands.runOnce(() -> this.setLevel(0), this),
+    //             this.arm.moveToCommand(armkeep)
+    //             .alongWith(this.elevator.moveToPositionCommand())
+    //             .alongWith(this.head.magicgocCommand(coarlheadintake))
+    //         );
+    //     }
+    //     public Command alagekeep(){
+    //         return Commands.sequence(
+    //             Commands.runOnce(() -> this.setLevel(0), this),
+    //             this.arm.moveToCommand(armkeep)
+    //             .alongWith(this.elevator.moveToPositionCommand())
+    //             .andThen(this.head.magicgocCommand(coarlheadintake))
+    //         );
+    //     }
+    //     public Command Elevatorgo(){
+    //         if(invertarm){
+    //             return CannotL4levelput();
+    //         }else{
+    //             return CanL4levelput();
+    //         }
+    //     }
+    //     public Command CanL4levelput(){
+    //         return Commands.sequence(
+    //             Commands.runOnce(() -> this.setLevel(eleLevel), this),
+    //             this.arm.moveToCommand(this.Armchoose[0])
+    //             .alongWith(this.head.magicgocCommand(headLevel[0]))
+    //             .alongWith(this.elevator.moveToPositionCommand()),
+    //             new WaitUntilCommand(() -> this.elevator.atgoal()),
+    //             this.head.magicgocCommand(headputcoral)
+    //         );
+    //     }
 
-        public Command CannotL4levelput(){
-            return Commands.sequence(
-                Commands.runOnce(() -> this.setLevel(eleLevel), this),
-                this.arm.moveToCommand(this.Armchoose[1])
-                .alongWith(this.head.magicgocCommand(headLevel[1]))
-                .alongWith(this.elevator.moveToPositionCommand())
-            );
-        }
-        public Command putCoral() {
-            return Commands.sequence(
-                this.head.intakeputcmd().withTimeout(1),
-                this.coralkeep()
-            );
-        }
-        public Command highalage(){
-            return Commands.sequence(
-                Commands.runOnce(() -> this.setLevel(5), this),
-                Commands.parallel(
-                    this.arm.moveToCommand(this.Armchoose[0]),
-                    this.head.magicgocCommand(headLevel[0]),
-                    this.elevator.moveToPositionCommand()
-                    ).until(() -> this.elevator.atgoal()),
-                this.head.alagelintakeexecute()
-            );
-        }
-        public Command lowalage(){
-            return Commands.sequence(
-                Commands.runOnce(() -> this.setLevel(6), this),
-                Commands.parallel(
-                    this.arm.moveToCommand(this.Armchoose[0]),
-                    this.head.magicgocCommand(headLevel[0]),
-                    this.elevator.moveToPositionCommand()
-                    ).until(() -> this.elevator.atgoal()),
-               this.head.alagelintakeexecute()
-            );
-        }
-        public Command net(){
-            return Commands.sequence(
-                Commands.runOnce(() -> this.setLevel(4), this),
-                Commands.parallel(
-                    this.arm.moveToCommand(this.Armchoose[0]),
-                    this.head.magicgocCommand(coarlheadintake),
-                    this.elevator.moveToPositionCommand()
-                    ).until(() -> this.elevator.atgoal()),
-                this.head.alageput()
-            );
-        }
+    //     public Command CannotL4levelput(){
+    //         return Commands.sequence(
+    //             Commands.runOnce(() -> this.setLevel(eleLevel), this),
+    //             this.arm.moveToCommand(this.Armchoose[1])
+    //             .alongWith(this.head.magicgocCommand(headLevel[1]))
+    //             .alongWith(this.elevator.moveToPositionCommand())
+    //         );
+    //     }
+    //     public Command putCoral() {
+    //         return Commands.sequence(
+    //             this.head.intakeputcmd().withTimeout(1),
+    //             this.coralkeep()
+    //         );
+    //     }
+    //     public Command highalage(){
+    //         return Commands.sequence(
+    //             Commands.runOnce(() -> this.setLevel(5), this),
+    //             Commands.parallel(
+    //                 this.arm.moveToCommand(this.Armchoose[0]),
+    //                 this.head.magicgocCommand(headLevel[0]),
+    //                 this.elevator.moveToPositionCommand()
+    //                 ).until(() -> this.elevator.atgoal()),
+    //             this.head.alagelintakeexecute()
+    //         );
+    //     }
+    //     public Command lowalage(){
+    //         return Commands.sequence(
+    //             Commands.runOnce(() -> this.setLevel(6), this),
+    //             Commands.parallel(
+    //                 this.arm.moveToCommand(this.Armchoose[0]),
+    //                 this.head.magicgocCommand(headLevel[0]),
+    //                 this.elevator.moveToPositionCommand()
+    //                 ).until(() -> this.elevator.atgoal()),
+    //            this.head.alagelintakeexecute()
+    //         );
+    //     }
+    //     public Command net(){
+    //         return Commands.sequence(
+    //             Commands.runOnce(() -> this.setLevel(4), this),
+    //             Commands.parallel(
+    //                 this.arm.moveToCommand(this.Armchoose[0]),
+    //                 this.head.magicgocCommand(coarlheadintake),
+    //                 this.elevator.moveToPositionCommand()
+    //                 ).until(() -> this.elevator.atgoal()),
+    //             this.head.alageput()
+    //         );
+    //     }
 
-    //---------------head安全處理-------------
-    public double headLevel(int Level){
-        if(Math.abs(this.elevator.goal() - this.elevator.encoder()) >= 45){
-            return this.headLevel[Level] - 0.25;
-        }else if(Math.abs(this.elevator.goal() - this.elevator.encoder()) >= 10){
-            return this.headLevel[Level] - 0.06;
-        }else{
-            return this.headLevel[Level];
-        }
-    }
-    public Command headmeterCommand(int whatLevel){
-        return runOnce(() -> this.headLevel(whatLevel));
-    }
-    public Command waitElevator(){
-        return new WaitUntilCommand(() -> this.elevator.atgoal());
-    }
-    public Command levelCommand(int whatLevel) {
-        return Commands.runOnce(() -> this.seteleLevel(whatLevel));
-    }
-    public void seteleLevel(int Level){
-        this.eleLevel = Level;
-    }
-    public void setLevel(int Level){
-        this.elevator.setLevel(Level);
-    }
-    public void stopMotor(){
-        this.head.headstop();
-        this.arm.stop();
-        this.elevator.stop();
-        this.head.intakestop();
-    }
-    public Command stop(){
-        return runOnce(() -> this.stopMotor());
-    }
-    @Override
-    public void periodic() {
-        SmartDashboard.putNumber("Level", this.eleLevel);
-        SmartDashboard.putBoolean("setintake", this.coraloralage);
-        SmartDashboard.putBoolean("highlow", highlow);
-    }
+    // //---------------head安全處理-------------
+    // public double headLevel(int Level){
+    //     if(Math.abs(this.elevator.goal() - this.elevator.encoder()) >= 45){
+    //         return this.headLevel[Level] - 0.25;
+    //     }else if(Math.abs(this.elevator.goal() - this.elevator.encoder()) >= 10){
+    //         return this.headLevel[Level] - 0.06;
+    //     }else{
+    //         return this.headLevel[Level];
+    //     }
+    // }
+    // public Command headmeterCommand(int whatLevel){
+    //     return runOnce(() -> this.headLevel(whatLevel));
+    // }
+    // public Command waitElevator(){
+    //     return new WaitUntilCommand(() -> this.elevator.atgoal());
+    // }
+    // public Command levelCommand(int whatLevel) {
+    //     return Commands.runOnce(() -> this.seteleLevel(whatLevel));
+    // }
+    // public void seteleLevel(int Level){
+    //     this.eleLevel = Level;
+    // }
+    // public void setLevel(int Level){
+    //     this.elevator.setLevel(Level);
+    // }
+    // public void stopMotor(){
+    //     this.head.headstop();
+    //     this.arm.stop();
+    //     this.elevator.stop();
+    //     this.head.intakestop();
+    // }
+    // public Command stop(){
+    //     return runOnce(() -> this.stopMotor());
+    // }
+    // @Override
+    // public void periodic() {
+    //     SmartDashboard.putNumber("Level", this.eleLevel);
+    //     SmartDashboard.putBoolean("setintake", this.coraloralage);
+    //     SmartDashboard.putBoolean("highlow", highlow);
+    // }
 }
