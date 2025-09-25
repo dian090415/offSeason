@@ -43,4 +43,11 @@ public class Driver extends XboxController {
     public Trigger net(){
         return new Trigger(this::getYButton);
     }
-}
+    public boolean driverswerve(){
+        if(this.getLeftY() > 0 || this.getLeftX() > 0 || this.getRightX() > 0 ){
+            return true;
+        }else{
+            return false;
+        }
+        }
+    }

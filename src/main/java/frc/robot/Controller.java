@@ -37,4 +37,11 @@ public class Controller extends XboxController {
     public Trigger low(){
         return new Trigger(this::getlow);
     }
+    public boolean Controllerswerve(){
+        if(this.getLeftY() > 0 || this.getLeftX() > 0 || this.getRightX() > 0 ){
+            return true;
+        }else{
+            return false;
+        }
+        }
 }

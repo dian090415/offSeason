@@ -5,6 +5,7 @@ import org.photonvision.simulation.VisionSystemSim;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Head;
@@ -34,67 +35,73 @@ public class RobotContainer {
 
   public RobotContainer() {
     this.Swerve.setDefaultCommand(
-        new DriveCmd(Swerve,
+        new DriveCmd(
+            Swerve,
             () -> -this.driver.getLeftY(),
             () -> this.driver.getLeftX(),
             () -> this.driver.getRightX(),
             () -> true));
 
-    this.Elevator.setDefaultCommand(this.ElevatorCmd);
-    this.Head.setDefaultCommand(this.HeadCmd);
-    this.arm.setDefaultCommand(this.armCmd);
+    new Trigger(() -> Math.abs(this.controller.getLeftY()) > 0.1 ||
+        Math.abs(this.controller.getLeftX()) > 0.1 ||
+        Math.abs(this.controller.getRightX()) > 0.1)
+        .whileTrue(new DriveCmd(
+            Swerve,
+            () -> -this.controller.getLeftY(),
+            () -> this.controller.getLeftX(),
+            () -> this.controller.getRightX(),
+            () -> true));
+
     this.configBindings();
     visionSubsystem.periodic();
-
   }
 
   public void configBindings() {
     // this.controller.L1()
     // .onTrue(this.Superstructure.levelCommand(1));
     // this.controller.L2()
-    //     .onTrue(this.Superstructure.levelCommand(2));
+    // .onTrue(this.Superstructure.levelCommand(2));
     // this.controller.L3()
-    //     .onTrue(this.Superstructure.levelCommand(3));
+    // .onTrue(this.Superstructure.levelCommand(3));
     // this.controller.L4()
-    //     .onTrue(this.Superstructure.levelCommand(4));
+    // .onTrue(this.Superstructure.levelCommand(4));
     this.driver.Intake()
-    .onTrue(this.Superstructure.test())
-    .onFalse(this.Elevator.hold());
+        .onTrue(this.Superstructure.test())
+        .onFalse(this.Elevator.hold());
     // this.driver.restgryo()
-    //     .onTrue(this.Swerve.resetGyro());
+    // .onTrue(this.Swerve.resetGyro());
     // this.controller.coral()
-    //     .onTrue(this.Superstructure.setcmd(1));
-    //     this.controller.alage()
-    //     .onTrue(this.Superstructure.setcmd(0));
+    // .onTrue(this.Superstructure.setcmd(1));
+    // this.controller.alage()
+    // .onTrue(this.Superstructure.setcmd(0));
     // this.driver.Leftgo()
-    //     .onTrue(this.Superstructure.Elevatorgo());
+    // .onTrue(this.Superstructure.Elevatorgo());
     // this.driver.put()
-    //     .onTrue(this.Superstructure.putCoral());
+    // .onTrue(this.Superstructure.putCoral());
     // this.driver.Rightgo()
-    //     .onTrue(this.Superstructure.alageintakedown())
-    //     .onFalse(this.Superstructure.alagekeep());
+    // .onTrue(this.Superstructure.alageintakedown())
+    // .onFalse(this.Superstructure.alagekeep());
     // this.controller.high()
-    //     .onTrue(this.Superstructure.highalage())
-    //     .onFalse(this.Superstructure.alagekeep());
+    // .onTrue(this.Superstructure.highalage())
+    // .onFalse(this.Superstructure.alagekeep());
     // this.controller.low()
-    //     .onTrue(this.Superstructure.lowalage())
-    //     .onFalse(this.Superstructure.alagekeep());
+    // .onTrue(this.Superstructure.lowalage())
+    // .onFalse(this.Superstructure.alagekeep());
     // this.driver.net()
-    //     .onTrue(this.Superstructure.net())
-    //     .onFalse(this.Superstructure.coralkeep());
+    // .onTrue(this.Superstructure.net())
+    // .onFalse(this.Superstructure.coralkeep());
 
     // this.driver.put()
-    //     .onTrue(this.Superstructure.Elevatorgo());
+    // .onTrue(this.Superstructure.Elevatorgo());
     // this.controller.go()
-    //     .onTrue(this.Superstructure.test());
-      // this.controller.L3()
-      //     .onTrue(this.Elevator.startCommand());
-      // this.controller.L2()
-      //     .onTrue(this.Elevator.stopCommand());
-      // this.controller.go()
-      //     .onTrue(this.Elevator.sysIdElevatorTest());
+    // .onTrue(this.Superstructure.test());
+    // this.controller.L3()
+    // .onTrue(this.Elevator.startCommand());
+    // this.controller.L2()
+    // .onTrue(this.Elevator.stopCommand());
+    // this.controller.go()
+    // .onTrue(this.Elevator.sysIdElevatorTest());
   }
-  
 
   public Command getAutonomousCommand() {
     return null;

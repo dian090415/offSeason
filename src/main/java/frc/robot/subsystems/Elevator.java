@@ -20,6 +20,8 @@ import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.PerUnit;
 import edu.wpi.first.units.VoltageUnit;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Per;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -49,6 +51,9 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Degrees;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
@@ -63,27 +68,38 @@ public class Elevator extends SubsystemBase {
 
     private MotionMagicVoltage profileReq = new MotionMagicVoltage(0.0);
 
+    public static final Angle MainPivot_CCW_LIMIT = Degrees.of(110);// 角度限制(wpi打包模式
+    public static final Angle MainPivot_CW_LIMIT = Degrees.of(40);// 角度限制(wpi打包模式
+
+    private DoubleSupplier angleRadiansSupplier = () -> MainPivot_CW_LIMIT.in(Radians);
+
+    public static final Per<AngleUnit, DistanceUnit> MOTOR_ROTATIONS_PER_METER_UNIT = Rotations.of(1)
+            .div(Inches.of(13.0 / 50.0 * (Math.PI * 1.4397) * 2));// div馬達圈數/電梯移動的距離
+    public static final double MOTOR_ROTATIONS_PER_METER = MOTOR_ROTATIONS_PER_METER_UNIT.in(Rotations.per(Meter));// 其實就是捲捲毛算給我的
+
+    public static final Distance MIN_LENGTH = Inches.of(27.0);
+    public static final Distance MIN_PADDED_LENGTH = MIN_LENGTH.plus(Inches.of(0.5));// 在最小長度的基礎上，加上 0.5 英吋作為安全墊
+    public static final Distance MAX_LENGTH = Inches.of(66.0);
+    public static final double MIN_LENGTH_ROTATIONS = MIN_LENGTH.in(Meters)
+            * MOTOR_ROTATIONS_PER_METER;
+    public static final double MAX_LENGTH_ROTATIONS = MAX_LENGTH.in(Meters)
+            * MOTOR_ROTATIONS_PER_METER;
+
     public static final PerUnit<VoltageUnit, AngularVelocityUnit> VoltsPerRotationPerSecond = Volts
-            .per(RotationsPerSecond);
+            .per(RotationsPerSecond);// 確保單位正確 per = ÷（這樣是為了wpi計算安全 不知道爲什麽但國外就這樣寫
     public static final PerUnit<VoltageUnit, AngularAccelerationUnit> VoltsPerRotationPerSecondSquared = Volts
-            .per(RotationsPerSecond.per(Second));
+            .per(RotationsPerSecond.per(Second));// 確保單位正確 per = ÷ （這樣是為了wpi計算安全 不知道爲什麽但國外就這樣寫
     public static final Per<VoltageUnit, AngularVelocityUnit> K_V = VoltsPerRotationPerSecond
-            .ofNative(0.15 * 1.508 / 1.4397);
+            .ofNative(0.15 * 1.508 / 1.4397);// 換成機構的數值
 
     public static final Per<VoltageUnit, AngularAccelerationUnit> K_A = VoltsPerRotationPerSecondSquared
-            .ofNative(0.006 * 1.508 / 1.4397 * 1.15);
+            .ofNative(0.006 * 1.508 / 1.4397 * 1.15);// 換成機構的數值
 
     public static final double K_C = -0.17 * 1.508 / 1.4397;
     public static final double K_G = 0.4 * 1.508 / 1.4397;
 
-    public static final Per<AngleUnit, DistanceUnit> MOTOR_ROTATIONS_PER_METER_UNIT =
-
-            Rotations.of(1).div(Inches.of(13.0 / 50.0 * (Math.PI * 1.4397) * 2));
-    public static final double MOTOR_ROTATIONS_PER_METER = MOTOR_ROTATIONS_PER_METER_UNIT.in(Rotations.per(Meter));
-
     private final TalonFX main = new TalonFX(22);
     private final TalonFX follow = new TalonFX(23);
-    
 
     // ---------------------我寫的廢物code爛就是爛沒藉口-----------------------------------------
     private final double ratio = 0.28;
@@ -134,9 +150,9 @@ public class Elevator extends SubsystemBase {
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
         talonFXConfigs.SoftwareLimitSwitch.withForwardSoftLimitEnable(true)
-                .withForwardSoftLimitThreshold(15.12067461471358)
+                .withForwardSoftLimitThreshold(MAX_LENGTH_ROTATIONS)
                 .withReverseSoftLimitEnable(true)
-                .withReverseSoftLimitThreshold(0.0);
+                .withReverseSoftLimitThreshold(MIN_LENGTH_ROTATIONS);
 
         talonFXConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true)
                 .withSupplyCurrentLimit(Amps.of(80));
@@ -179,7 +195,11 @@ public class Elevator extends SubsystemBase {
 
     public Command goToLength(Double length) {
         return this.run(
-                () -> goToRotations(length* MOTOR_ROTATIONS_PER_METER));
+                () -> goToRotations(length * MOTOR_ROTATIONS_PER_METER));
+    }
+
+    public void setAngleSupplier(DoubleSupplier angleRadians) {
+        angleRadiansSupplier = angleRadians;
     }
 
     // -------------profiled pid輸出模式--------------------------------

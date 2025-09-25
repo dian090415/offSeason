@@ -18,22 +18,27 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Main;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Degrees;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Meters;
 
 public class Arm extends SubsystemBase {
     private final CANcoder canEncoder = new CANcoder(30);
@@ -46,14 +51,22 @@ public class Arm extends SubsystemBase {
     // -----------------------------------新程式-------------------------------------------------
 
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 79.3651 * 14.0 / 9.0;
-    public static final double ENCODER_OFFSET_ROTATIONS = 0.12109375 + 0.125; // = 0.24609375
-    public static final double K_V = 12.0 / (100 / MOTOR_ROTATIONS_PER_ARM_ROTATION);
-    public static final double K_A = 0.25 /* v/oldRot/s^2 */ * 9.0 / 14.0; /* newRot/oldRot */;
-    public static final Angle CCW_LIMIT = Degrees.of(110);
-    public static final Angle CW_LIMIT = Degrees.of(40);
+    public static final double ENCODER_OFFSET_ROTATIONS = 0.12109375 + 0.125; // = 0.24609375//encoder偏差值？？？
+    public static final double K_V = 12.0 / (100 / MOTOR_ROTATIONS_PER_ARM_ROTATION);// 計算前餽公式
+    public static final double K_A = 0.25 /* v/oldRot/s^2 */ * 9.0 / 14.0; /* newRot/oldRot */;// 原本轉換成機櫃
+    public static final Angle CCW_LIMIT = Degrees.of(110);// 角度限制(wpi打包模式
+    public static final Angle CW_LIMIT = Degrees.of(40);// 角度限制(wpi打包模式
     private StatusSignal<Angle> m_angleSig = lMain.getPosition();
     private double m_goalRotations;
-      private MotionMagicVoltage m_profileReq = new MotionMagicVoltage(0);
+    private MotionMagicVoltage m_profileReq = new MotionMagicVoltage(0);
+
+    public static final double K_G_RETRACTED = 0.38;
+    public static final double K_G_EXTENDED = 0.38;
+
+    public static final Distance Elevator_MIN_LENGTH = Inches.of(27.0);
+    public static final Distance Elevator_MAX_LENGTH = Inches.of(66.0);
+
+    private DoubleSupplier m_lengthSupplier = () -> Elevator_MIN_LENGTH.in(Meters);
 
     // 你的機械比
     private final double ratio = 123.456789;
@@ -74,8 +87,7 @@ public class Arm extends SubsystemBase {
         CANcoderConfig();
     }
 
-
-//----------------------------------------------------新code---------------------------------------------------------------------------
+    // ----------------------------------------------------新code---------------------------------------------------------------------------
 
     private void configureMotors() {
         // in init function
@@ -107,10 +119,11 @@ public class Arm extends SubsystemBase {
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
         talonFXConfigs.Feedback
-                .withFeedbackRemoteSensorID(30)
-                .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
-                .withSensorToMechanismRatio(1)
-                .withRotorToSensorRatio(MOTOR_ROTATIONS_PER_ARM_ROTATION);
+                .withFeedbackRemoteSensorID(30)// 這個 TalonFX 要讀取 ID 30 的 CANcoder 作為回饋
+                .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)// 指定要使用 Fused CANcoder（整合了磁性角度與速度的
+                                                                                  // sensor）作為回饋信號 簡單來説就是跟馬達encoder結合
+                .withSensorToMechanismRatio(1)// 齒輪比1
+                .withRotorToSensorRatio(MOTOR_ROTATIONS_PER_ARM_ROTATION);// 將馬達軸的旋轉換算成手臂旋轉
         talonFXConfigs.SoftwareLimitSwitch
                 .withForwardSoftLimitEnable(true)
                 .withForwardSoftLimitThreshold(CCW_LIMIT)
@@ -126,21 +139,14 @@ public class Arm extends SubsystemBase {
         lFollow.getConfigurator().apply(talonFXConfigs);
         rFollow.getConfigurator().apply(talonFXConfigs);
     }
-    public void CANcoderConfig(){
-      var CANcoderConfig = new CANcoderConfiguration();
-      CANcoderConfig.MagnetSensor.MagnetOffset = ENCODER_OFFSET_ROTATIONS;
-      CANcoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = Units.degreesToRotations(250);
-      CANcoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
-      canEncoder.getConfigurator().apply(CANcoderConfig);
-    }
 
-    public double getAngleRotations() {
-        return m_angleSig.getValueAsDouble();
-      }
-    
-      public double getAngleRadians() {
-        return Units.rotationsToRadians(m_angleSig.getValueAsDouble());
-      }
+    public void CANcoderConfig() {
+        var CANcoderConfig = new CANcoderConfiguration();
+        CANcoderConfig.MagnetSensor.MagnetOffset = ENCODER_OFFSET_ROTATIONS;// 磁力感測器的偏移量
+        CANcoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = Units.degreesToRotations(250);// 絕對值感測器的不連續點(超過皆爲這個數值
+        CANcoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+        canEncoder.getConfigurator().apply(CANcoderConfig);
+    }
 
     // Motion Magic 移動
     public void moveTo(double targetPosition) {
@@ -177,28 +183,61 @@ public class Arm extends SubsystemBase {
         }
     }
 
+    // -------新code------------------------------
+
+    public double getAngleRotations() {
+        return m_angleSig.getValueAsDouble();
+    }
+
+    public double getAngleRadians() {
+        return Units.rotationsToRadians(m_angleSig.getValueAsDouble());
+    }
+
+    public void setLengthSupplier(DoubleSupplier lengthSupplier) {
+        m_lengthSupplier = lengthSupplier;
+    }
+
+    private double getLengthMeters() {
+        return m_lengthSupplier.getAsDouble();
+    }
+
     public double getLengthKg() {
         return MathUtil.interpolate(
-          MainPivotConstants.K_G_RETRACTED,
-          MainPivotConstants.K_G_EXTENDED,
-          MathUtil.inverseInterpolate(
-              ElevatorConstants.MIN_LENGTH.in(Meters),
-              ElevatorConstants.MAX_LENGTH.in(Meters),
-              getLengthMeters()));
-      }
+                K_G_RETRACTED,
+                K_G_EXTENDED,
+                MathUtil.inverseInterpolate(
+                        Elevator_MIN_LENGTH.in(Meters),
+                        Elevator_MAX_LENGTH.in(Meters),
+                        getLengthMeters()));
+    }
 
     public double getKgVolts() {
         return Math.cos(getAngleRadians())
-            * getLengthKg();
-      }
+                * getLengthKg();
+    }
 
     public Command hold() {
-        return sequence(runOnce(() -> m_goalRotations = getAngleRotations()),
-          run(()->{
-            lMain.setControl(
-              m_profileReq.withPosition(m_goalRotations).withFeedForward(getKgVolts()));
-          }));
-      }
+        return Commands.sequence(runOnce(() -> m_goalRotations = getAngleRotations()),
+                run(() -> {
+                    lMain.setControl(
+                            m_profileReq.withPosition(m_goalRotations).withFeedForward(getKgVolts()));
+                }));
+    }
+
+    public void setAngleRadians(double angle) {
+        m_goalRotations = Units.radiansToRotations(angle);
+
+        lMain.setControl(
+                m_profileReq.withPosition(m_goalRotations).withFeedForward(getKgVolts()));
+    }
+
+    public Command goTo(DoubleSupplier angleSupplier) {
+        return run(() -> setAngleRadians(angleSupplier.getAsDouble()));
+    }
+
+    public Command goTo(Supplier<Angle> angleSupplier) {
+        return run(() -> setAngleRadians(angleSupplier.get().in(Radians)));
+    }
 
     @Override
     public void periodic() {
