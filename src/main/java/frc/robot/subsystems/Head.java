@@ -16,6 +16,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
@@ -206,7 +207,7 @@ public class Head extends SubsystemBase {
   }
 
   public Command hold() {
-    return Commands.sequence(runOnce(() -> setAngleRadians(getAngleRadians())), Commands.idle());
+    return sequence(runOnce(() -> setAngleRadians(getAngleRadians())), Commands.idle());//Commands.idle()  進入一個「什麼都不做，但永遠不會結束」的狀態
   }
 
     @Override
