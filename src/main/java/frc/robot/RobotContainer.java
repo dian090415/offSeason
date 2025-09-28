@@ -6,7 +6,7 @@ import org.photonvision.simulation.VisionSystemSim;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.MainPivotS;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Head;
 import frc.robot.subsystems.Superstructure;
@@ -25,7 +25,7 @@ public class RobotContainer {
   private final Elevator Elevator = new Elevator();
   private final SwerveSubsystem Swerve = new SwerveSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem(Swerve);
-  private final Arm arm = new Arm();
+  private final MainPivotS arm = new MainPivotS();
   private final Head Head = new Head();
   private final Superstructure Superstructure = new Superstructure(arm, Elevator, Head);
 

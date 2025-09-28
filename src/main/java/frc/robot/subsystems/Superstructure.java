@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 public class Superstructure extends SubsystemBase {
-    private final Arm arm;
+    private final MainPivotS arm;
     private final Elevator elevator;
     private final Head head;
     private final double Elevatorsafemeter = 0.0;//TODO
@@ -38,7 +38,7 @@ public class Superstructure extends SubsystemBase {
     public boolean coraloralage;
     public boolean highlow;
     
-        public Superstructure(Arm arm, Elevator elevator, Head head) {
+        public Superstructure(MainPivotS arm, Elevator elevator, Head head) {
             this.elevator = elevator;
             this.arm = arm;
             this.head = head;
@@ -47,11 +47,11 @@ public class Superstructure extends SubsystemBase {
             this.coraloralage = true;
         }
     
-        public Command test() {
-            return Commands.sequence(
-                this.elevator.goToLength(1.0)
-            );
-        }
+        // public Command test() {
+        //     return Commands.sequence(
+        //         this.elevator.goToLength(1.0)
+        //     );
+        // }
     //     }
     //     public void setcoralorintake(double num){
     //         if(num == 1){
@@ -217,4 +217,4 @@ public class Superstructure extends SubsystemBase {
     //     SmartDashboard.putBoolean("setintake", this.coraloralage);
     //     SmartDashboard.putBoolean("highlow", highlow);
     // }
-}
+        }

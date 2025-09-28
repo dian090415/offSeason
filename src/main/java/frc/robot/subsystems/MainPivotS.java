@@ -40,7 +40,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Meters;
 
-public class Arm extends SubsystemBase {
+public class MainPivotS extends SubsystemBase {
     private final CANcoder canEncoder = new CANcoder(30);
     private final TalonFX lMain = new TalonFX(24);
     private final TalonFX lFollow = new TalonFX(25);
@@ -76,7 +76,7 @@ public class Arm extends SubsystemBase {
     private final MotionMagicExpoVoltage motionMagic = new MotionMagicExpoVoltage(
             this.canEncoder.getPosition().getValueAsDouble() * ratio);
 
-    public Arm() {
+    public MainPivotS() {
         // 設定馬達追隨
         lFollow.setControl(new Follower(lMain.getDeviceID(), false));
         rMain.setControl(new Follower(lMain.getDeviceID(), true));

@@ -193,9 +193,9 @@ public class Elevator extends SubsystemBase {
         main.setControl(profileReq.withPosition(motorRotations).withFeedForward(getKGVolts()));
     }
 
-    public Command goToLength(Double length) {
+    public Command goToLength(DoubleSupplier length) {
         return this.run(
-                () -> goToRotations(length * MOTOR_ROTATIONS_PER_METER));
+                () -> goToRotations(length.getAsDouble() * MOTOR_ROTATIONS_PER_METER));
     }
 
     public void setAngleSupplier(DoubleSupplier angleRadians) {

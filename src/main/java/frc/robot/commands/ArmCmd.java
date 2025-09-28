@@ -3,13 +3,13 @@ package frc.robot.commands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.MainPivotS;
 
 public class ArmCmd extends Command {
-	private final Arm Arm;
+	private final MainPivotS Arm;
 	private final XboxController controller;
 
-	public ArmCmd(Arm Arm , XboxController controller){
+	public ArmCmd(MainPivotS Arm , XboxController controller){
 		this.Arm = Arm;
 		this.controller = controller;
 		this.addRequirements(this.Arm);

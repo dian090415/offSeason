@@ -11,8 +11,11 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Per;
 import frc.robot.util.Swerve.ModuleLimits;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Second;
@@ -24,6 +27,7 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Meters;
 
 public final class Constants {
 
@@ -101,7 +105,7 @@ public final class Constants {
         public static final double kPhysicalMaxAngularSpeedRadiansPerSec = 7 * 2 * Math.PI;
         public static final double kTeleDriveMaxSpeedMeterPerSec = (kPhysicalMaxSpeedMetersPerSecond);
         public static final double kTeleDriveMaxAngularSpeedRadiansPerSec = 7;
-        public static final double kTeleDriveMaxAccelerationUnitsPerSec = 5;
+        public static final double kTeleDriveMaxAccelerationUnitsPerSec = 7;
 
         public static final ModuleLimits moduleLimitsFree = new ModuleLimits(kPhysicalMaxSpeedMetersPerSecond,
                 kTeleDriveMaxAccelerationUnitsPerSec, Units.degreesToRadians(1080.0));
@@ -131,5 +135,32 @@ public final class Constants {
 
     public static final class robotConstants {
         public static final double bumper = 10.0;
+    }
+
+    public static final class ElevatorConstants {
+        public static final Per<AngleUnit, DistanceUnit> MOTOR_ROTATIONS_PER_METER_UNIT = Rotations.of(1)
+                .div(Inches.of(13.0 / 50.0 * (Math.PI * 1.4397) * 2));// div馬達圈數/電梯移動的距離
+        public static final double MOTOR_ROTATIONS_PER_METER = MOTOR_ROTATIONS_PER_METER_UNIT.in(Rotations.per(Meter));// 其實就是捲捲毛算給我的
+
+        public static final Distance MIN_LENGTH = Inches.of(27.0);
+        public static final Distance MIN_PADDED_LENGTH = MIN_LENGTH.plus(Inches.of(0.5));// 在最小長度的基礎上，加上 0.5 英吋作為安全墊
+        public static final Distance MAX_LENGTH = Inches.of(66.0);
+        public static final double MIN_LENGTH_ROTATIONS = MIN_LENGTH.in(Meters)
+                * MOTOR_ROTATIONS_PER_METER;
+        public static final double MAX_LENGTH_ROTATIONS = MAX_LENGTH.in(Meters)
+                * MOTOR_ROTATIONS_PER_METER;
+
+    }
+    public static final class WristConstants {
+        public static final double K_S = 0;
+    public static final double K_V = 4.548;
+    public static final double K_A = 0.2 * 0.45 / 0.25;
+    public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 48.0 / 9.0 * 40.0 / 15.0 * 40.0 / 15.0;
+    public static final Angle CCW_LIMIT = Degrees.of(146.8);
+    public static final Angle CW_LIMIT = Degrees.of(-70);
+    public static final Angle K_G_ANGLE = Degrees.of(35.06);//Rotations.of(-0.072);
+    public static final Angle K_G_ANGLE_WITH_CORAL = Degrees.of(45);
+    public static final double K_G = 0.45;
+        
     }
 }
