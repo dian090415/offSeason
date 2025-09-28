@@ -11,19 +11,34 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Head;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.Drivetrain.SwerveSubsystem;
+import frc.robot.subsystems.NewControl.NewController;
+import frc.robot.subsystems.NewDrive.drive;
+import frc.robot.subsystems.NewDrive.driveIOHardware;
+import frc.robot.subsystems.NewVision.Vision;
 import frc.robot.commands.ArmCmd;
-import frc.robot.commands.DriveCmd;
 import frc.robot.commands.ElevatorCmd;
 import frc.robot.commands.HeadCmd;
+import frc.robot.commands.NewDriveCmd;
 
 public class RobotContainer {
 
   private final Controller controller = new Controller();
-  private final Driver driver = new Driver();
 
+
+  private final Driver driver = new Driver();
+  
+  // ------------------------------新東西---------------------------
+
+  private final NewController main_driver = new NewController(0);
+  private final NewController co_driver = new NewController(1);
+  private final Vision vision = new Vision();
   private final Elevator Elevator = new Elevator();
-  private final SwerveSubsystem Swerve = new SwerveSubsystem();
+
+  private final driveIOHardware driveIO = new driveIOHardware();
+  private final drive drive = new drive(driveIO, vision);
+
+  // -----------------------------------------------------------------
+
   private final VisionSubsystem visionSubsystem = new VisionSubsystem(Swerve);
   private final MainPivotS arm = new MainPivotS();
   private final Head Head = new Head();
@@ -34,23 +49,27 @@ public class RobotContainer {
   private final ArmCmd armCmd = new ArmCmd(arm, controller);
 
   public RobotContainer() {
-    this.Swerve.setDefaultCommand(
-        new DriveCmd(
-            Swerve,
-            () -> -this.driver.getLeftY(),
-            () -> this.driver.getLeftX(),
-            () -> this.driver.getRightX(),
-            () -> true));
 
-    new Trigger(() -> Math.abs(this.controller.getLeftY()) > 0.1 ||
-        Math.abs(this.controller.getLeftX()) > 0.1 ||
-        Math.abs(this.controller.getRightX()) > 0.1)
-        .whileTrue(new DriveCmd(
-            Swerve,
-            () -> -this.controller.getLeftY(),
-            () -> this.controller.getLeftX(),
-            () -> this.controller.getRightX(),
-            () -> true));
+        this.drive.setDefaultCommand(new NewDriveCmd(drive, main_driver, co_driver));
+    // this.Swerve.setDefaultCommand(
+    //     new DriveCmd(
+    //         Swerve,
+    //         () -> -this.driver.getLeftY(),
+    //         () -> this.driver.getLeftX(),
+    //         () -> this.driver.getRightX(),
+    //         () -> true));
+
+    // new Trigger(() -> Math.abs(this.controller.getLeftY()) > 0.1 ||
+    //     Math.abs(this.controller.getLeftX()) > 0.1 ||
+    //     Math.abs(this.controller.getRightX()) > 0.1)
+    //     .whileTrue(new DriveCmd(
+    //         Swerve,
+    //         () -> -this.controller.getLeftY(),
+    //         () -> this.controller.getLeftX(),
+    //         () -> this.controller.getRightX(),
+    //         () -> true));
+
+
 
     this.configBindings();
     visionSubsystem.periodic();
