@@ -2,6 +2,8 @@ package frc.robot.subsystems.NewDrive;
 
 import org.littletonrobotics.junction.Logger;
 
+import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,6 +22,8 @@ import frc.robot.util.Swerve.SwerveSetpointGenerator;
 
 public class drive extends SubsystemBase {
 
+    private static drive autodrive;
+
     private final driveIO io;
 
     private final SwerveDrivePoseEstimator poseEstimator;
@@ -32,8 +36,6 @@ public class drive extends SubsystemBase {
 
     private final Vision vision;
 
-    private Rotation2d yaw;
-
     private SwerveSetpoint currentSetpoint = new SwerveSetpoint(
             new ChassisSpeeds(),
             new SwerveModuleState[] {
@@ -42,6 +44,10 @@ public class drive extends SubsystemBase {
                     new SwerveModuleState(),
                     new SwerveModuleState()
             });
+
+    private final PIDController xController = new PIDController(10.0, 0.0, 0.0);
+    private final PIDController yController = new PIDController(10.0, 0.0, 0.0);
+    private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
 
     public drive(driveIO io, Vision vision) {
 
@@ -68,6 +74,29 @@ public class drive extends SubsystemBase {
 
         io.zeroHeading();
         io.resetEncoders();
+        headingController.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
+        public static drive getinDrive(){
+            if(autodrive == null){
+                autodrive = new drive(null, null);
+            }
+                return autodrive;
+            }
+
+        public void followTrajectory(SwerveSample sample) {
+        // Get the current pose of the robot
+        Pose2d pose = poseEstimator.getEstimatedPosition();
+
+        // Generate the next speeds for the robot
+        ChassisSpeeds speeds = new ChassisSpeeds(
+            sample.vx + xController.calculate(pose.getX(), sample.x),
+            sample.vy + yController.calculate(pose.getY(), sample.y),
+            sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading)
+        );
+
+        // Apply the generated speeds
+        runVelocity(speeds);
     }
 
     public void runVelocity(ChassisSpeeds speeds) {
@@ -110,18 +139,26 @@ public class drive extends SubsystemBase {
 
     }
 
+    public Pose2d getPose() {
+        return poseEstimator.getEstimatedPosition();
+    }
+
+    public void resetOdometry(Pose2d pose) {
+        poseEstimator.resetPose(pose);
+    }
+
 
     @Override
     public void periodic() {
 
-        field.setRobotPose(poseEstimator.getEstimatedPosition());
+        // field.setRobotPose(poseEstimator.getEstimatedPosition());
 
         poseEstimator.update(
-                io.getRotation2d().rotateBy(yaw),
+                io.getRotation2d(),
                 this.io.getModulePositions());
 
-        poseEstimator.addVisionMeasurement(vision.getLeftPose(), Timer.getFPGATimestamp());
-        poseEstimator.addVisionMeasurement(vision.getRightPose(), Timer.getFPGATimestamp());
+        // poseEstimator.addVisionMeasurement(vision.getLeftPose(), Timer.getFPGATimestamp());
+        // poseEstimator.addVisionMeasurement(vision.getRightPose(), Timer.getFPGATimestamp());
 
         double[] pose = {poseEstimator.getEstimatedPosition().getX(), 
                         poseEstimator.getEstimatedPosition().getY(), 

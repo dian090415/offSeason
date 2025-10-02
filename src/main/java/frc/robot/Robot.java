@@ -4,17 +4,30 @@
 
 package frc.robot;
 
+import java.util.Optional;
+
+import choreo.Choreo;
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.NewDrive.*;;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
- * the TimedRobot documentation. If you change the name of this class or the package after creating
+ * the TimedRobot documentation. If you change the name of tFis class or the package after creating
  * this project, you must also update the Main.java file in the project.
  */
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
+
+
+  private final Optional<Trajectory<SwerveSample>> trajectory = Choreo.loadTrajectory("myTrajectory");
+
+    private final Timer timer = new Timer();
+
 
   private final RobotContainer m_robotContainer;
 

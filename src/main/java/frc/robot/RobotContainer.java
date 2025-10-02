@@ -1,16 +1,24 @@
 
 package frc.robot;
 
+import java.security.PublicKey;
+
 import org.photonvision.simulation.VisionSystemSim;
 
+import com.ctre.phoenix6.swerve.jni.SwerveJNI.DriveState;
+
+import choreo.auto.AutoFactory;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.MainPivotS;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Head;
 import frc.robot.subsystems.Superstructure;
-import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.NewControl.NewController;
 import frc.robot.subsystems.NewDrive.drive;
 import frc.robot.subsystems.NewDrive.driveIOHardware;
@@ -24,9 +32,8 @@ public class RobotContainer {
 
   private final Controller controller = new Controller();
 
-
   private final Driver driver = new Driver();
-  
+
   // ------------------------------新東西---------------------------
 
   private final NewController main_driver = new NewController(0);
@@ -39,7 +46,6 @@ public class RobotContainer {
 
   // -----------------------------------------------------------------
 
-  private final VisionSubsystem visionSubsystem = new VisionSubsystem(Swerve);
   private final MainPivotS arm = new MainPivotS();
   private final Head Head = new Head();
   private final Superstructure Superstructure = new Superstructure(arm, Elevator, Head);
@@ -50,30 +56,29 @@ public class RobotContainer {
 
   public RobotContainer() {
 
-        this.drive.setDefaultCommand(new NewDriveCmd(drive, main_driver, co_driver));
+
+    this.drive.setDefaultCommand(new NewDriveCmd(drive, main_driver, co_driver));
     // this.Swerve.setDefaultCommand(
-    //     new DriveCmd(
-    //         Swerve,
-    //         () -> -this.driver.getLeftY(),
-    //         () -> this.driver.getLeftX(),
-    //         () -> this.driver.getRightX(),
-    //         () -> true));
+    // new DriveCmd(
+    // Swerve,
+    // () -> -this.driver.getLeftY(),
+    // () -> this.driver.getLeftX(),
+    // () -> this.driver.getRightX(),
+    // () -> true));
 
     // new Trigger(() -> Math.abs(this.controller.getLeftY()) > 0.1 ||
-    //     Math.abs(this.controller.getLeftX()) > 0.1 ||
-    //     Math.abs(this.controller.getRightX()) > 0.1)
-    //     .whileTrue(new DriveCmd(
-    //         Swerve,
-    //         () -> -this.controller.getLeftY(),
-    //         () -> this.controller.getLeftX(),
-    //         () -> this.controller.getRightX(),
-    //         () -> true));
-
-
+    // Math.abs(this.controller.getLeftX()) > 0.1 ||
+    // Math.abs(this.controller.getRightX()) > 0.1)
+    // .whileTrue(new DriveCmd(
+    // Swerve,
+    // () -> -this.controller.getLeftY(),
+    // () -> this.controller.getLeftX(),
+    // () -> this.controller.getRightX(),
+    // () -> true));
 
     this.configBindings();
-    visionSubsystem.periodic();
   }
+
 
   public void configBindings() {
     // this.controller.L1()
@@ -85,8 +90,8 @@ public class RobotContainer {
     // this.controller.L4()
     // .onTrue(this.Superstructure.levelCommand(4));
     // this.driver.Intake()
-    //     .onTrue(this.Superstructure.test())
-    //     .onFalse(this.Elevator.hold());
+    // .onTrue(this.Superstructure.test())
+    // .onFalse(this.Elevator.hold());
     // this.driver.restgryo()
     // .onTrue(this.Swerve.resetGyro());
     // this.controller.coral()
@@ -120,6 +125,8 @@ public class RobotContainer {
     // .onTrue(this.Elevator.stopCommand());
     // this.controller.go()
     // .onTrue(this.Elevator.sysIdElevatorTest());
+
+    this.main_driver.zeroHeading().onTrue(new InstantCommand(() -> drive.zeroHeading()));
   }
 
   public Command getAutonomousCommand() {

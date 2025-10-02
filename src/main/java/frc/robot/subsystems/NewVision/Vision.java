@@ -44,6 +44,12 @@ public class Vision extends SubsystemBase {
 
     @Override
     public void periodic() {
-        getPoses();
+
+        try {
+            getPoses();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        
     }
 }
