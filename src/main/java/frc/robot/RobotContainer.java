@@ -18,7 +18,9 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.MainPivotS;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Head;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.NewControl.NewController;
 import frc.robot.subsystems.NewDrive.drive;
 import frc.robot.subsystems.NewDrive.driveIOHardware;
@@ -44,17 +46,36 @@ public class RobotContainer {
   private final driveIOHardware driveIO = new driveIOHardware();
   private final drive drive = new drive(driveIO, vision);
 
+  private final AutoFactory autoFactory;
+
+  private final MainPivotS MainPivotS = new MainPivotS();
+  private final Head Head = new Head();
+  public final Arm arm = new Arm();
+  public final Intake intake = new Intake();
+  private final Superstructure Superstructure = new Superstructure(arm,intake);
+
+  private boolean isRedAlliance() {
+    return DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Red);
+}
+
   // -----------------------------------------------------------------
 
-  private final MainPivotS arm = new MainPivotS();
-  private final Head Head = new Head();
-  private final Superstructure Superstructure = new Superstructure(arm, Elevator, Head);
+
 
   private final ElevatorCmd ElevatorCmd = new ElevatorCmd(Elevator, controller);
   private final HeadCmd HeadCmd = new HeadCmd(Head, controller);
-  private final ArmCmd armCmd = new ArmCmd(arm, controller);
 
   public RobotContainer() {
+
+    autoFactory = new AutoFactory(
+      drive::getPose, // A function that returns the current robot pose
+      drive::resetOdometry, // A function that resets the current robot pose to the provided Pose2d
+      drive::followTrajectory, // The drive subsystem trajectory follower 
+      isRedAlliance(), // If alliance flipping should be enabled 
+      drive // The drive subsystem
+  );
+
+
 
 
     this.drive.setDefaultCommand(new NewDriveCmd(drive, main_driver, co_driver));
@@ -79,6 +100,16 @@ public class RobotContainer {
     this.configBindings();
   }
 
+  public Command autotest(){
+    autoFactory.cache().clear();
+    return Commands.sequence(
+      autoFactory.resetOdometry("testone"),
+      autoFactory.trajectoryCmd("testone")
+    );
+  }
+
+
+  
 
   public void configBindings() {
     // this.controller.L1()
@@ -130,6 +161,6 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return null;
+    return autotest();
   }
 }

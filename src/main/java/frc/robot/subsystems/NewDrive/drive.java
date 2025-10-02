@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Robot;
 import frc.robot.subsystems.NewVision.Vision;
 import frc.robot.util.Swerve.SwerveSetpoint;
 import frc.robot.util.Swerve.SwerveSetpointGenerator;
@@ -96,7 +97,7 @@ public class drive extends SubsystemBase {
         );
 
         // Apply the generated speeds
-        runVelocity(speeds);
+        autoVelocity(speeds);
     }
 
     public void runVelocity(ChassisSpeeds speeds) {
@@ -120,6 +121,14 @@ public class drive extends SubsystemBase {
         Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
 
         this.io.setModuleStates(setpointStates);
+    }
+
+    public void autoVelocity(ChassisSpeeds speeds) {
+
+        ChassisSpeeds relativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, this.io.getRotation2d());
+        ChassisSpeeds discretizeSpeeds = ChassisSpeeds.discretize(relativeSpeeds, Robot.kDefaultPeriod);
+        SwerveModuleState[] states = kinematics.toSwerveModuleStates(discretizeSpeeds);
+        this.io.setModuleStates(states);
     }
 
     public void autoAlign(double[] speeds) {

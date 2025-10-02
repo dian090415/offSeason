@@ -14,42 +14,48 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import frc.robot.subsystems.Arm.Arm;
 
 public class Superstructure extends SubsystemBase {
-    private final MainPivotS arm;
-    private final Elevator elevator;
-    private final Head head;
-    private final double Elevatorsafemeter = 0.0;//TODO
-    private final double Elevatorminmeter = 0.0;//TODO
-    private final double Elevatormaxmeter = 0.0;//TODO  
-    private final double Headsafemeter = 0.0;//TODO
-    private final double[] headLevel = {19.01025390625};//TODO 預設
-    private final double[] Armchoose = {27.39599609375 ,25.2978515625};//可以L4，不行
-    public double headputcoral = 1.0;
-    public double coarlheadintake = 5.44677734375;
-    public double alageheadintake = 3.0;
-    public double headkeep = 1.0;
-    public double coralarmdown = -0.42861328125
-    ;
-    public double alagearmdown = 0.0;
-    public double armkeep = 26.4033203125;
-    public int eleLevel;
-    public boolean invertarm;
-    public boolean coraloralage;
-    public boolean highlow;
+    public final Arm arm;
+    public final Intake intake;
+    // private final MainPivotS arm;
+    // private final Elevator elevator;
+    // private final Head head;
+    // private final double Elevatorsafemeter = 0.0;//TODO
+    // private final double Elevatorminmeter = 0.0;//TODO
+    // private final double Elevatormaxmeter = 0.0;//TODO  
+    // private final double Headsafemeter = 0.0;//TODO
+    // private final double[] headLevel = {19.01025390625};//TODO 預設
+    // private final double[] Armchoose = {27.39599609375 ,25.2978515625};//可以L4，不行
+    // public double headputcoral = 1.0;
+    // public double coarlheadintake = 5.44677734375;
+    // public double alageheadintake = 3.0;
+    // public double headkeep = 1.0;
+    // public double coralarmdown = -0.42861328125
+    // ;
+    // public double alagearmdown = 0.0;
+    // public double armkeep = 26.4033203125;
+    // public int eleLevel;
+    // public boolean invertarm;
+    // public boolean coraloralage;
+    // public boolean highlow;
     
-        public Superstructure(MainPivotS arm, Elevator elevator, Head head) {
-            this.elevator = elevator;
-            this.arm = arm;
-            this.head = head;
-            this.eleLevel = 0;
-            this.invertarm = false;
-            this.coraloralage = true;
+        public Superstructure(Arm m_arm , Intake m_intake) {
+            this.arm = m_arm;
+            this.intake = m_intake;
+            // this.elevator = elevator;
+            // this.arm = arm;
+            // this.head = head;
+            // this.eleLevel = 0;
+            // this.invertarm = false;
+            // this.coraloralage = true;
         }
+
     
         // public Command test() {
         //     return Commands.sequence(
-        //         this.elevator.goToLength(1.0)
+        //         this.arm.goToPosition(Arm.position.POST_INTAKE_CORAL)
         //     );
         // }
     //     }

@@ -36,10 +36,10 @@ public class Head extends SubsystemBase {
     private final MotionMagicVoltage headvolt = new MotionMagicVoltage(0.0);
 
     private final TalonFX head = new TalonFX(20);
-    private final TalonFX intake = new TalonFX(21);
+    // private final TalonFX intake = new TalonFX(21);
     private final double metersPerangle = (1 / 0.0263671875) * (1 / 360);// 馬達一圈轉0.026圈*360
     private final MotionMagicExpoVoltage m_request = new MotionMagicExpoVoltage(0);
-    private final AnalogInput IRSensor = new AnalogInput(0);
+    // private final AnalogInput IRSensor = new AnalogInput(0);
     // -------------------新code---------------------
     public static final double K_S = 0;
     public static final double K_V = 4.548;
@@ -93,76 +93,76 @@ public class Head extends SubsystemBase {
         talonFXConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
 
         head.getConfigurator().apply(talonFXConfigs);
-        intake.getConfigurator().apply(talonFXConfigs);
+        // intake.getConfigurator().apply(talonFXConfigs);
     }
 
-    public void Magicgo(double Position) {
-        head.setControl(m_request.withPosition(Position));
-    }
+    // public void Magicgo(double Position) {
+    //     head.setControl(m_request.withPosition(Position));
+    // }
 
-    public Command magicgocCommand(double Position) {
-        return run(() -> this.Magicgo(Position));
-    }
+    // public Command magicgocCommand(double Position) {
+    //     return run(() -> this.Magicgo(Position));
+    // }
 
-    public Command coarlintakeexecute() {
-        return Commands.sequence(
-                Commands.run(() -> this.intakexcute(4), this),
-                new WaitCommand(0.75),
-                Commands.run(() -> this.intakexcute(7), this),
-                new WaitCommand(0.75));
-    }
+    // public Command coarlintakeexecute() {
+    //     return Commands.sequence(
+    //             Commands.run(() -> this.intakexcute(4), this),
+    //             new WaitCommand(0.75),
+    //             Commands.run(() -> this.intakexcute(7), this),
+    //             new WaitCommand(0.75));
+    // }
 
-    public Command alagelintakeexecute() {
-        return Commands.run(() -> this.intakexcute(-7), this);
-    }
+    // public Command alagelintakeexecute() {
+    //     return Commands.run(() -> this.intakexcute(-7), this);
+    // }
 
-    public Command alageput() {
-        return Commands.runEnd(() -> this.intakexcute(7), this::intakestop, this);
-    }
+    // public Command alageput() {
+    //     return Commands.runEnd(() -> this.intakexcute(7), this::intakestop, this);
+    // }
 
-    public Command intakebackexecute() {
-        return Commands.runEnd(() -> this.intakebackexcute(), this::intakestop, this);
-    }
+    // public Command intakebackexecute() {
+    //     return Commands.runEnd(() -> this.intakebackexcute(), this::intakestop, this);
+    // }
 
-    public Command intakeputcmd() {
-        return Commands.runEnd(() -> this.intakeput(), this::intakestop, this);
-    }
+    // public Command intakeputcmd() {
+    //     return Commands.runEnd(() -> this.intakeput(), this::intakestop, this);
+    // }
 
-    public Command intakestopCmd() {
-        return Commands.run(() -> this.intakestop(), this);
-    }
+    // public Command intakestopCmd() {
+    //     return Commands.run(() -> this.intakestop(), this);
+    // }
 
-    public void intakestop() {
-        this.intake.setVoltage(0.0);
-    }
+    // public void intakestop() {
+    //     this.intake.setVoltage(0.0);
+    // }
 
-    public void headstop() {
-        this.head.stopMotor();
-    }
+    // public void headstop() {
+    //     this.head.stopMotor();
+    // }
 
-    public void intakexcute(double volt) {
-        this.intake.setVoltage(volt);
-    }
+    // public void intakexcute(double volt) {
+    //     this.intake.setVoltage(volt);
+    // }
 
-    public void intakebackexcute() {
-        this.intake.setVoltage(-1);
-    }
+    // public void intakebackexcute() {
+    //     this.intake.setVoltage(-1);
+    // }
 
-    public void intakeput() {
-        this.intake.setVoltage(-6);
-    }
+    // public void intakeput() {
+    //     this.intake.setVoltage(-6);
+    // }
 
-    public void intakesetVoltage(double volt) {
-        this.intake.setVoltage(volt);
-    }
+    // public void intakesetVoltage(double volt) {
+    //     this.intake.setVoltage(volt);
+    // }
 
-    public boolean isCoralIn() {
-        return this.IRSensor.getVoltage() <= 1.0 ? true : false;
-    }
+    // public boolean isCoralIn() {
+    //     return this.IRSensor.getVoltage() <= 1.0 ? true : false;
+    // }
 
-    public boolean isCoralout() {
-        return this.IRSensor.getVoltage() >= 1.0 ? true : false;
-    }
+    // public boolean isCoralout() {
+    //     return this.IRSensor.getVoltage() >= 1.0 ? true : false;
+    // }
 
     //-----------------新code----------------------
     public double setpoint() {

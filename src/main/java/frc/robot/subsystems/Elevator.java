@@ -135,7 +135,7 @@ public class Elevator extends SubsystemBase {
         this.follow.getConfigurator().setPosition(0.0);
         this.Config();
         follow.setControl(new Follower(main.getDeviceID(), false));
-        setDefaultCommand(this.hold());
+        // setDefaultCommand(this.hold());
     }
 
     // ---------------------新輸出模式---------------------
