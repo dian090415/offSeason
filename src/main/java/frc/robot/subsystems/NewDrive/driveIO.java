@@ -10,6 +10,8 @@ public interface driveIO {
 
     Rotation2d getRotation2d();
 
+    Rotation2d getOdometry2d();
+
     double getHeading();
 
     double getTurnRate();

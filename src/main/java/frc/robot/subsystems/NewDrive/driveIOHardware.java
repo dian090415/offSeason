@@ -31,11 +31,16 @@ public class driveIOHardware implements driveIO {
 
     @Override
     public double getHeading() {
-        return -this.gyro.getAngle();
+        return this.gyro.getAngle();
     }
 
     @Override
     public Rotation2d getRotation2d() {
+        return Rotation2d.fromDegrees(-this.getHeading());
+    }
+
+    @Override
+    public Rotation2d getOdometry2d() {
         return Rotation2d.fromDegrees(this.getHeading());
     }
 

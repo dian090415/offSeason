@@ -36,12 +36,12 @@ public class NewDriveCmd extends Command {
         this.driverInputs = new double[] {
                 applyDeadband(-driver.getLeftY()) * DriveConstants.kMaxSpeedMeterPerSecond,
                 applyDeadband(-driver.getLeftX()) * DriveConstants.kMaxSpeedMeterPerSecond,
-                applyDeadband(driver.getRightX()) * DriveConstants.kMaxAngularSpeedRadiansPerSecond
+                applyDeadband(-driver.getRightX()) * DriveConstants.kMaxAngularSpeedRadiansPerSecond
         };
         this.co_driverInputs = new double[] {
                 applyDeadband(-co_driver.getLeftY()) * DriveConstants.kMaxSpeedMeterPerSecond,
                 applyDeadband(-co_driver.getLeftX()) * DriveConstants.kMaxSpeedMeterPerSecond,
-                applyDeadband(co_driver.getRightX()) * DriveConstants.kMaxAngularSpeedRadiansPerSecond
+                applyDeadband(-co_driver.getRightX()) * DriveConstants.kMaxAngularSpeedRadiansPerSecond
         };
 
 

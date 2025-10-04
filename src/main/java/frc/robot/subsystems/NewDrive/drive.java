@@ -31,7 +31,8 @@ public class drive extends SubsystemBase {
 
     private final Field2d field;
 
-    private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(DriveConstants.moduleLocations);
+    private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(DriveConstants.autoLocations);
+
 
     private final SwerveSetpointGenerator swerveSetpointGenerator;
 

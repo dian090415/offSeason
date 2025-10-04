@@ -41,7 +41,7 @@ public final class Constants {
     public static final class DriveConstants {
 
         public static final double kMaxSpeedMeterPerSecond = 2;
-        public static final double kMaxAngularSpeedRadiansPerSecond = 3 * 1.8 * Math.PI;
+        public static final double kMaxAngularSpeedRadiansPerSecond = 1 * 1.8 * Math.PI;
 
         public static final double kMaxAccerationUnitsPerSecond = 5;
 
@@ -54,6 +54,13 @@ public final class Constants {
                 new Translation2d(0.278, -0.278),
                 new Translation2d(-0.278, 0.278),
                 new Translation2d(-0.278, -0.278)
+        };
+
+        public static final Translation2d[] autoLocations = new Translation2d[] {
+            new Translation2d(-0.278, -0.278),
+            new Translation2d(-0.278, 0.278),
+            new Translation2d(0.278, -0.278),
+            new Translation2d(0.278, 0.278)
         };
 
         public static final ModuleLimits moduleLimitsFree = new ModuleLimits(kMaxSpeedMeterPerSecond,
