@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -28,6 +29,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.ElevatorConstants;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -66,7 +68,8 @@ public class Elevator extends SubsystemBase {
 
     // -----------------------這我新寫的-----------------------------------------------------------
 
-    private MotionMagicVoltage profileReq = new MotionMagicVoltage(0.0);
+    
+    private MotionMagicVoltage profileReq = new MotionMagicVoltage(MIN_LENGTH_ROTATIONS);
 
     public static final Angle MainPivot_CCW_LIMIT = Degrees.of(110);// 角度限制(wpi打包模式
     public static final Angle MainPivot_CW_LIMIT = Degrees.of(40);// 角度限制(wpi打包模式
@@ -100,6 +103,7 @@ public class Elevator extends SubsystemBase {
 
     private final TalonFX main = new TalonFX(22);
     private final TalonFX follow = new TalonFX(23);
+      private StatusSignal<Angle> positionSignal = main.getPosition();
 
     // ---------------------我寫的廢物code爛就是爛沒藉口-----------------------------------------
     private final double ratio = 0.28;
@@ -131,11 +135,9 @@ public class Elevator extends SubsystemBase {
 
     public Elevator() {
         pidController.setTolerance(3, 0.05);
-        this.main.getConfigurator().setPosition(0.0);
-        this.follow.getConfigurator().setPosition(0.0);
         this.Config();
         follow.setControl(new Follower(main.getDeviceID(), false));
-        // setDefaultCommand(this.hold());
+        setDefaultCommand(this.hold());
     }
 
     // ---------------------新輸出模式---------------------
@@ -167,9 +169,14 @@ public class Elevator extends SubsystemBase {
 
         main.getConfigurator().apply(talonFXConfigs);
         follow.getConfigurator().apply(talonFXConfigs);
+        main.setPosition(ElevatorConstants.MIN_LENGTH_ROTATIONS);
     }
 
     public double goalRotations = 0.0;
+
+      public Command home() {
+    return runOnce(() -> main.setPosition(ElevatorConstants.MIN_LENGTH_ROTATIONS)).ignoringDisable(true);
+  }
 
     public double getLengthMeters() {
         return getMotorRotations() / MOTOR_ROTATIONS_PER_METER;
@@ -310,8 +317,6 @@ public class Elevator extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putBoolean("atgoal", this.atgoal());
-        SmartDashboard.putNumber("goal", this.pidController.getGoal().position);
         if (DriverStation.isDisabled()) {
             main.set(0);
         }

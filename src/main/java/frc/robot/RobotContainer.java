@@ -1,6 +1,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import java.security.PublicKey;
 
 import org.photonvision.simulation.VisionSystemSim;
@@ -20,6 +22,7 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Head;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.Arm.AbstractArm;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.NewControl.NewController;
 import frc.robot.subsystems.NewDrive.drive;
@@ -32,9 +35,6 @@ import frc.robot.commands.NewDriveCmd;
 
 public class RobotContainer {
 
-  private final Controller controller = new Controller();
-
-  private final Driver driver = new Driver();
 
   // ------------------------------新東西---------------------------
 
@@ -62,8 +62,6 @@ public class RobotContainer {
 
 
 
-  private final ElevatorCmd ElevatorCmd = new ElevatorCmd(Elevator, controller);
-  private final HeadCmd HeadCmd = new HeadCmd(Head, controller);
 
   public RobotContainer() {
 
@@ -154,8 +152,8 @@ public class RobotContainer {
     // .onTrue(this.Elevator.startCommand());
     // this.controller.L2()
     // .onTrue(this.Elevator.stopCommand());
-    // this.controller.go()
-    // .onTrue(this.Elevator.sysIdElevatorTest());
+    this.co_driver.Intake()
+    .onTrue(this.Head.testgoTo(5));
 
     this.main_driver.zeroHeading().onTrue(new InstantCommand(() -> drive.zeroHeading()));
   }

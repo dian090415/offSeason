@@ -195,6 +195,10 @@ public class Head extends SubsystemBase {
     return run(() -> setAngleRadians(angleSupplier.getAsDouble()));
   }
 
+  public Command testgoTo(double angleSupplier) {
+    return run(() -> setAngleRadians(angleSupplier));
+  }
+
   public Command goTo(Supplier<Angle> angleSupplier) {
     return run(() -> setAngleRadians(angleSupplier.get().in(Radians)));
   }

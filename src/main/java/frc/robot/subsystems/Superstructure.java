@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import frc.robot.subsystems.Arm.AbstractArm;
 import frc.robot.subsystems.Arm.Arm;
 
 public class Superstructure extends SubsystemBase {
@@ -53,11 +54,6 @@ public class Superstructure extends SubsystemBase {
         }
 
     
-        // public Command test() {
-        //     return Commands.sequence(
-        //         this.arm.goToPosition(Arm.position.POST_INTAKE_CORAL)
-        //     );
-        // }
     //     }
     //     public void setcoralorintake(double num){
     //         if(num == 1){
