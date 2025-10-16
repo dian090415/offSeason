@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.Constants.WristConstants;
 
 
 public class Head extends SubsystemBase {
@@ -63,10 +64,11 @@ public class Head extends SubsystemBase {
       }
 
     public Head() {
-        this.Config();
+        this.Config();//刷入馬達設定
         m_setpointSig.setUpdateFrequency(50);// 設定roborio刷新頻率
         m_currentSig.setUpdateFrequency(50);// 設定roborio刷新頻率
         setDefaultCommand(hold());
+        this.head.getConfigurator().setPosition(WristConstants.CW_LIMIT);
     }
 
     public void Config() {
