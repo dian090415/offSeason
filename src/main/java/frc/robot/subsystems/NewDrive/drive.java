@@ -36,8 +36,6 @@ public class drive extends SubsystemBase {
 
     private final SwerveSetpointGenerator swerveSetpointGenerator;
 
-    private final Vision vision;
-
     private SwerveSetpoint currentSetpoint = new SwerveSetpoint(
             new ChassisSpeeds(),
             new SwerveModuleState[] {
@@ -51,12 +49,9 @@ public class drive extends SubsystemBase {
     private final PIDController yController = new PIDController(10.0, 0.0, 0.0);
     private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
 
-    public drive(driveIO io, Vision vision) {
+    public drive(driveIO io) {
 
         this.io = io;
-
-        this.vision = vision;
-
 
         Pose2d initialPose = new Pose2d(0, 0, io.getRotation2d());
 
@@ -81,7 +76,7 @@ public class drive extends SubsystemBase {
 
         public static drive getinDrive(){
             if(autodrive == null){
-                autodrive = new drive(null, null);
+                autodrive = new drive(null);
             }
                 return autodrive;
             }
@@ -157,6 +152,10 @@ public class drive extends SubsystemBase {
         poseEstimator.resetPose(pose);
     }
 
+    public void addVisionMeasurement(Pose2d pose) {
+        this.poseEstimator.addVisionMeasurement(pose, Timer.getFPGATimestamp());
+    }
+
 
     @Override
     public void periodic() {
@@ -167,8 +166,6 @@ public class drive extends SubsystemBase {
                 io.getRotation2d(),
                 this.io.getModulePositions());
 
-        // poseEstimator.addVisionMeasurement(vision.getLeftPose(), Timer.getFPGATimestamp());
-        // poseEstimator.addVisionMeasurement(vision.getRightPose(), Timer.getFPGATimestamp());
 
         double[] pose = {poseEstimator.getEstimatedPosition().getX(), 
                         poseEstimator.getEstimatedPosition().getY(), 

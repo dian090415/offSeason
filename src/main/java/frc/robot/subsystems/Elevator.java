@@ -137,7 +137,7 @@ public class Elevator extends SubsystemBase {
         pidController.setTolerance(3, 0.05);
         this.Config();
         follow.setControl(new Follower(main.getDeviceID(), false));
-        setDefaultCommand(this.hold());
+        // setDefaultCommand(this.hold());
     }
 
     // ---------------------新輸出模式---------------------

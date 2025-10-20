@@ -53,7 +53,7 @@ public class MainPivotS extends SubsystemBase {
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 79.3651 * 14.0 / 9.0;
     public static final double ENCODER_OFFSET_ROTATIONS = 0.12109375 + 0.125; // = 0.24609375//encoder偏差值？？？
     public static final double K_V = 12.0 / (100 / MOTOR_ROTATIONS_PER_ARM_ROTATION);// 計算前餽公式
-    public static final double K_A = 0.25 /* v/oldRot/s^2 */ * 9.0 / 14.0; /* newRot/oldRot */;// 原本轉換成機櫃
+    public static final double K_A = 0.25 /* v/oldRot/s^2 */ * 9.0 / 14.0; /* newRot/oldRot */// 原本轉換成機櫃
     public static final Angle CCW_LIMIT = Degrees.of(110);// 角度限制(wpi打包模式
     public static final Angle CW_LIMIT = Degrees.of(40);// 角度限制(wpi打包模式
     private StatusSignal<Angle> m_angleSig = lMain.getPosition();
@@ -116,7 +116,7 @@ public class MainPivotS extends SubsystemBase {
         talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         // 馬達正反轉
-        talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         talonFXConfigs.Feedback
                 .withFeedbackRemoteSensorID(30)// 這個 TalonFX 要讀取 ID 30 的 CANcoder 作為回饋
@@ -241,8 +241,7 @@ public class MainPivotS extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("armEncoder", encoder());
-        SmartDashboard.putNumber("canEncoder", canEncoder.getAbsolutePosition().getValueAsDouble() * ratio);
-        SmartDashboard.putBoolean("armatgoal", this.armatgoal(1));
+        SmartDashboard.putNumber("armCancoder", canEncoder.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("armMotor", lMain.getPosition().getValueAsDouble());
     }
 }

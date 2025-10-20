@@ -23,6 +23,7 @@ import frc.robot.subsystems.Head;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Arm.AbstractArm;
+import frc.robot.subsystems.Arm.AbstractArm.ArmPosition;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.NewControl.NewController;
 import frc.robot.subsystems.NewDrive.drive;
@@ -40,11 +41,13 @@ public class RobotContainer {
 
   private final NewController main_driver = new NewController(0);
   private final NewController co_driver = new NewController(1);
-  private final Vision vision = new Vision();
+  
   private final Elevator Elevator = new Elevator();
 
   private final driveIOHardware driveIO = new driveIOHardware();
-  private final drive drive = new drive(driveIO, vision);
+  private final drive drive = new drive(driveIO);
+
+  private final Vision vision = new Vision(drive);
 
   private final AutoFactory autoFactory;
 
@@ -153,7 +156,7 @@ public class RobotContainer {
     // this.controller.L2()
     // .onTrue(this.Elevator.stopCommand());
     this.co_driver.Intake()
-    .onTrue(this.Head.testgoTo(5));
+    .onTrue(this.arm.goToPosition(Arm.Positions.POST_INTAKE_CORAL));
 
     this.main_driver.zeroHeading().onTrue(new InstantCommand(() -> drive.zeroHeading()));
   }

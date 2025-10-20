@@ -67,7 +67,7 @@ public class Head extends SubsystemBase {
         this.Config();//刷入馬達設定
         m_setpointSig.setUpdateFrequency(50);// 設定roborio刷新頻率
         m_currentSig.setUpdateFrequency(50);// 設定roborio刷新頻率
-        setDefaultCommand(hold());
+        // setDefaultCommand(hold());
         this.head.getConfigurator().setPosition(WristConstants.CW_LIMIT);
     }
 
@@ -195,10 +195,6 @@ public class Head extends SubsystemBase {
 
   public Command goTo(DoubleSupplier angleSupplier) {
     return run(() -> setAngleRadians(angleSupplier.getAsDouble()));
-  }
-
-  public Command testgoTo(double angleSupplier) {
-    return run(() -> setAngleRadians(angleSupplier));
   }
 
   public Command goTo(Supplier<Angle> angleSupplier) {
