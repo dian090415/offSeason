@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Robot;
 import frc.robot.subsystems.NewVision.Vision;
+import frc.robot.subsystems.NewVision.VisionFuser;
 import frc.robot.util.Swerve.SwerveSetpoint;
 import frc.robot.util.Swerve.SwerveSetpointGenerator;
 
