@@ -36,7 +36,7 @@ public class DriveToPoseCommand extends Command {
         );
 
         controller.setTolerance(
-            new Pose2d(TRANSLATION_TOLERANCE, TRANSLATION_TOLERANCE, new Rotation2d(ROTATION_TOLERANCE))
+            new Pose2d(TRANSLATION_TOLERANCE, TRANSLATION_TOLERANCE, new Rotation2d(ROTATION_TOLERANCE))//「到達目標」的允許誤差範圍
         );
 
         addRequirements(drive);
