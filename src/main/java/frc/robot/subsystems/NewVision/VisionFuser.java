@@ -146,8 +146,7 @@ public class VisionFuser extends SubsystemBase {
 
                 Math.abs(corner.y - height) < borderPixels → y 靠近下邊 */
                 //borderPixels 是允許的邊界厚度（像素），如果角點在這個厚度以內就判為「靠邊」。一旦發現靠邊，將 cornerNearEdge = true 並 break（跳出角點迴圈）。
-              if (Math.abs(corner.x - 0.0) < borderPixels || Math.abs(corner.x - VisionConstants.SIM_CAMERA_PROPERTIES.getResWidth()) < borderPixels
-                  || Math.abs(corner.y - 0.0) < borderPixels || Math.abs(corner.y - VisionConstants.SIM_CAMERA_PROPERTIES.getResHeight()) < borderPixels) {
+              if (Math.abs(corner.x - 0.0) < borderPixels || Math.abs(corner.y - 0.0) < borderPixels) {
                 cornerNearEdge = true;
                 break;
               }
@@ -291,16 +290,4 @@ class VisionConstants {
         new Rotation3d(0.0, 0.0, Math.toRadians(-30))
     )
 );
-  // 這裡使用值只是為了讓上面代碼可編譯 —— 你專案中應該有 SimCameraProperties 或自己的常數
-  public static final double SIM_RES_WIDTH = 1280;
-  public static final double SIM_RES_HEIGHT = 900;
-  static SimCameraProperties SIM_CAMERA_PROPERTIES = new SimCameraProperties();
-  static {
-    SIM_CAMERA_PROPERTIES.setCalibration(1280, 900, Rotation2d.fromDegrees(100));/*
-    - 設定相機的校正參數：
-    - 解析度：1280 × 900
-    - 對角視角 (FOV)：100 度
-     */
-    SIM_CAMERA_PROPERTIES.setFPS(20);//- 設定模擬相機的更新頻率為 20 FPS（每秒 20 張影像）
-  }
 }
