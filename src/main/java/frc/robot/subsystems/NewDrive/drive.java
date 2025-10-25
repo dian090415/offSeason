@@ -74,6 +74,9 @@ public class drive extends SubsystemBase {
         io.resetEncoders();
         headingController.enableContinuousInput(-Math.PI, Math.PI);
     }
+    public SwerveDrivePoseEstimator poseEstimator(){
+        return poseEstimator;
+    }
 
         public static drive getinDrive(){
             if(autodrive == null){

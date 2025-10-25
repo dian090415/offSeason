@@ -1,244 +1,84 @@
-package frc.robot.subsystems;
+// package frc.robot.subsystems;
 
-import java.security.PublicKey;
-import java.util.Map;
-import java.util.concurrent.BlockingDeque;
-import java.util.function.BooleanSupplier;
+// import java.util.Map;
 
-import javax.sound.midi.Sequencer;
+// import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+// import edu.wpi.first.math.geometry.Pose2d;
+// import edu.wpi.first.math.geometry.Rotation2d;
+// import edu.wpi.first.wpilibj2.command.Command;
+// import edu.wpi.first.wpilibj2.command.Commands;
+// import edu.wpi.first.wpilibj2.command.SubsystemBase;
+// import frc.robot.subsystems.Arm.Arm;
+// import frc.robot.subsystems.NewVision.VisionFuser;
+// import frc.robot.subsystems.NewVision.VisionFuser.VisionConstants;
+// import frc.robot.subsystems.NewDrive.*;
+// import frc.robot.subsystems.NewVision.Vision;
+// import frc.robot.commands.DriveToPoseCommand;
 
-import com.google.gson.annotations.Until;
+// public class Superstructure extends SubsystemBase {
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import frc.robot.subsystems.Arm.AbstractArm;
-import frc.robot.subsystems.Arm.Arm;
+//     private static class ReefConstants {
+//         public static final Map<Integer, Pose2d> REEF_TARGETS = Map.ofEntries(
+//             Map.entry(6, new Pose2d(13.257, 3.676, new Rotation2d(2.095))),
+//             Map.entry(7, new Pose2d(13.460, 4.020, new Rotation2d(3.139))),
+//             Map.entry(8, new Pose2d(13.257, 4.366, new Rotation2d(-2.095))),
+//             Map.entry(9, new Pose2d(12.861, 4.366, new Rotation2d(-1.047))),
+//             Map.entry(10, new Pose2d(12.657, 4.021, new Rotation2d(0.000))),
+//             Map.entry(11, new Pose2d(12.861, 3.677, new Rotation2d(1.047))),
+//             Map.entry(17, new Pose2d(4.292, 3.677, new Rotation2d(1.047))),
+//             Map.entry(18, new Pose2d(4.090, 4.021, new Rotation2d(0.000))),
+//             Map.entry(19, new Pose2d(4.292, 4.366, new Rotation2d(-1.047))),
+//             Map.entry(20, new Pose2d(4.689, 4.366, new Rotation2d(-2.095))),
+//             Map.entry(21, new Pose2d(4.889, 4.021, new Rotation2d(3.141))),
+//             Map.entry(22, new Pose2d(4.690, 3.677, new Rotation2d(2.095)))
+//         );
+//     }
 
-public class Superstructure extends SubsystemBase {
+//     public final Arm arm;
+//     public final Intake intake;
+//     private final driveIOHardware driveIO = new driveIOHardware();
+//     private final drive drive = new drive(driveIO);
+//     private final SwerveDrivePoseEstimator poseEstimator = drive.poseEstimator();
+//     private final VisionFuser visionFuser = new VisionFuser(
+//         VisionConstants.cameraTransforms, poseEstimator);
+//     private final Vision vision = new Vision(drive);
 
-    private class ReefConstants {
-        public static final Map<Integer, Pose2d> RED_REEF_TARGETS = Map.ofEntries(
-                Map.entry(6, new Pose2d(13.257, 3.676, new Rotation2d(2.095))),
-                Map.entry(7, new Pose2d(13.460, 4.020, new Rotation2d(3.139))),
-                Map.entry(8, new Pose2d(13.257, 4.366, new Rotation2d(-2.095))),
-                Map.entry(9, new Pose2d(12.861, 4.366, new Rotation2d(-1.047))),
-                Map.entry(10, new Pose2d(12.657, 4.021, new Rotation2d(0.000))),
-                Map.entry(11, new Pose2d(12.861, 3.677, new Rotation2d(1.047))));
+//     private final DriveToPoseCommand driveToPoseCommand;
 
-        public static final Map<Integer, Pose2d> BLUE_REEF_TARGETS = Map.ofEntries(
-                Map.entry(17, new Pose2d(4.292, 3.677, new Rotation2d(1.047))),
-                Map.entry(18, new Pose2d(4.090, 4.021, new Rotation2d(0.000))),
-                Map.entry(19, new Pose2d(4.292, 4.366, new Rotation2d(-1.047))),
-                Map.entry(20, new Pose2d(4.689, 4.366, new Rotation2d(-2.095))),
-                Map.entry(21, new Pose2d(4.889, 4.021, new Rotation2d(3.141))),
-                Map.entry(22, new Pose2d(4.690, 3.677, new Rotation2d(2.095))));
-        private double yoffset = 0.0;//TODO
-    }
+//     public Superstructure(Arm m_arm, Intake m_intake) {
+//         this.arm = m_arm;
+//         this.intake = m_intake;
 
-    public final Arm arm;
-    public final Intake intake;
-    // private final MainPivotS arm;
-    // private final Elevator elevator;
-    // private final Head head;
-    // private final double Elevatorsafemeter = 0.0;//TODO
-    // private final double Elevatorminmeter = 0.0;//TODO
-    // private final double Elevatormaxmeter = 0.0;//TODO
-    // private final double Headsafemeter = 0.0;//TODO
-    // private final double[] headLevel = {19.01025390625};//TODO 預設
-    // private final double[] Armchoose = {27.39599609375 ,25.2978515625};//可以L4，不行
-    // public double headputcoral = 1.0;
-    // public double coarlheadintake = 5.44677734375;
-    // public double alageheadintake = 3.0;
-    // public double headkeep = 1.0;
-    // public double coralarmdown = -0.42861328125
-    // ;
-    // public double alagearmdown = 0.0;
-    // public double armkeep = 26.4033203125;
-    // public int eleLevel;
-    // public boolean invertarm;
-    // public boolean coraloralage;
-    // public boolean highlow;
+//         this.driveToPoseCommand = new DriveToPoseCommand(
+//             drive,
+//             this::autoAligngoal, // Supplier<Pose2d>
+//             drive::getPose       // Supplier<Pose2d>
+//         );
+//     }
 
-    public Superstructure(Arm m_arm, Intake m_intake) {
-        this.arm = m_arm;
-        this.intake = m_intake;
-        // this.elevator = elevator;
-        // this.arm = arm;
-        // this.head = head;
-        // this.eleLevel = 0;
-        // this.invertarm = false;
-        // this.coraloralage = true;
-    }
+//     public int tagId() {
+//         if (vision.getLeftTagId() == vision.getRightTagId()) {
+//             return vision.getLeftTagId();
+//         } else if (visionFuser.apriltagId() != -1) {
+//             return visionFuser.apriltagId();
+//         } else {
+//             return -1;
+//         }
+//     }
 
-    // }
-    // public void setcoralorintake(double num){
-    // if(num == 1){
-    // this.coraloralage = true;
-    // }else if(num == 0){
-    // this.coraloralage = false;
-    // }
-    // }
-    // public Command setcmd(double num){
-    // return runOnce(() -> this.setcoralorintake(num));
-    // }
-    // public Command intake(){
-    // if(coraloralage){
-    // return coralintakedown();
-    // }else{
-    // return alageintakedown();
-    // }
-    // }
+//     public Pose2d autoAligngoal() {
+//         return ReefConstants.REEF_TARGETS.get(this.tagId());
+//     }
 
-    // public Command coralintakedown(){
-    // return Commands.sequence(
-    // Commands.runOnce(() -> this.setLevel(0), this),
-
-    // Commands.parallel(
-    // this.arm.moveToCommand(coralarmdown),
-    // this.head.magicgocCommand(coarlheadintake),
-    // this.elevator.moveToPositionCommand()
-    // ).until(() -> this.arm.armatgoal(coralarmdown)),
-    // this.head.coarlintakeexecute().until(() -> this.head.isCoralIn()),
-    // this.head.intakebackexecute().withTimeout(0.5)
-    // );
-    // }
-    // public Command alageintakedown(){
-    // return Commands.sequence(
-    // Commands.runOnce(() -> this.setLevel(0), this),
-    // Commands.parallel(
-    // this.arm.moveToCommand(alagearmdown),
-    // this.head.magicgocCommand(alageheadintake),
-    // this.elevator.moveToPositionCommand()
-    // ).until(() -> this.arm.armatgoal(alagearmdown)),
-    // this.head.alagelintakeexecute()
-    // );
-    // }
-    // public Command coralkeep(){
-    // return Commands.sequence(
-    // Commands.runOnce(() -> this.setLevel(0), this),
-    // this.arm.moveToCommand(armkeep)
-    // .alongWith(this.elevator.moveToPositionCommand())
-    // .alongWith(this.head.magicgocCommand(coarlheadintake))
-    // );
-    // }
-    // public Command alagekeep(){
-    // return Commands.sequence(
-    // Commands.runOnce(() -> this.setLevel(0), this),
-    // this.arm.moveToCommand(armkeep)
-    // .alongWith(this.elevator.moveToPositionCommand())
-    // .andThen(this.head.magicgocCommand(coarlheadintake))
-    // );
-    // }
-    // public Command Elevatorgo(){
-    // if(invertarm){
-    // return CannotL4levelput();
-    // }else{
-    // return CanL4levelput();
-    // }
-    // }
-    // public Command CanL4levelput(){
-    // return Commands.sequence(
-    // Commands.runOnce(() -> this.setLevel(eleLevel), this),
-    // this.arm.moveToCommand(this.Armchoose[0])
-    // .alongWith(this.head.magicgocCommand(headLevel[0]))
-    // .alongWith(this.elevator.moveToPositionCommand()),
-    // new WaitUntilCommand(() -> this.elevator.atgoal()),
-    // this.head.magicgocCommand(headputcoral)
-    // );
-    // }
-
-    // public Command CannotL4levelput(){
-    // return Commands.sequence(
-    // Commands.runOnce(() -> this.setLevel(eleLevel), this),
-    // this.arm.moveToCommand(this.Armchoose[1])
-    // .alongWith(this.head.magicgocCommand(headLevel[1]))
-    // .alongWith(this.elevator.moveToPositionCommand())
-    // );
-    // }
-    // public Command putCoral() {
-    // return Commands.sequence(
-    // this.head.intakeputcmd().withTimeout(1),
-    // this.coralkeep()
-    // );
-    // }
-    // public Command highalage(){
-    // return Commands.sequence(
-    // Commands.runOnce(() -> this.setLevel(5), this),
-    // Commands.parallel(
-    // this.arm.moveToCommand(this.Armchoose[0]),
-    // this.head.magicgocCommand(headLevel[0]),
-    // this.elevator.moveToPositionCommand()
-    // ).until(() -> this.elevator.atgoal()),
-    // this.head.alagelintakeexecute()
-    // );
-    // }
-    // public Command lowalage(){
-    // return Commands.sequence(
-    // Commands.runOnce(() -> this.setLevel(6), this),
-    // Commands.parallel(
-    // this.arm.moveToCommand(this.Armchoose[0]),
-    // this.head.magicgocCommand(headLevel[0]),
-    // this.elevator.moveToPositionCommand()
-    // ).until(() -> this.elevator.atgoal()),
-    // this.head.alagelintakeexecute()
-    // );
-    // }
-    // public Command net(){
-    // return Commands.sequence(
-    // Commands.runOnce(() -> this.setLevel(4), this),
-    // Commands.parallel(
-    // this.arm.moveToCommand(this.Armchoose[0]),
-    // this.head.magicgocCommand(coarlheadintake),
-    // this.elevator.moveToPositionCommand()
-    // ).until(() -> this.elevator.atgoal()),
-    // this.head.alageput()
-    // );
-    // }
-
-    // //---------------head安全處理-------------
-    // public double headLevel(int Level){
-    // if(Math.abs(this.elevator.goal() - this.elevator.encoder()) >= 45){
-    // return this.headLevel[Level] - 0.25;
-    // }else if(Math.abs(this.elevator.goal() - this.elevator.encoder()) >= 10){
-    // return this.headLevel[Level] - 0.06;
-    // }else{
-    // return this.headLevel[Level];
-    // }
-    // }
-    // public Command headmeterCommand(int whatLevel){
-    // return runOnce(() -> this.headLevel(whatLevel));
-    // }
-    // public Command waitElevator(){
-    // return new WaitUntilCommand(() -> this.elevator.atgoal());
-    // }
-    // public Command levelCommand(int whatLevel) {
-    // return Commands.runOnce(() -> this.seteleLevel(whatLevel));
-    // }
-    // public void seteleLevel(int Level){
-    // this.eleLevel = Level;
-    // }
-    // public void setLevel(int Level){
-    // this.elevator.setLevel(Level);
-    // }
-    // public void stopMotor(){
-    // this.head.headstop();
-    // this.arm.stop();
-    // this.elevator.stop();
-    // this.head.intakestop();
-    // }
-    // public Command stop(){
-    // return runOnce(() -> this.stopMotor());
-    // }
-    // @Override
-    // public void periodic() {
-    // SmartDashboard.putNumber("Level", this.eleLevel);
-    // SmartDashboard.putBoolean("setintake", this.coraloralage);
-    // SmartDashboard.putBoolean("highlow", highlow);
-    // }
-}
+//     public Command autoAlign() {
+//         Pose2d goal = autoAligngoal();
+//         if (goal == null) {
+//             return Commands.none(); // 沒有偵測到有效 Tag
+//         }
+//         return new DriveToPoseCommand(
+//             drive,
+//             this::autoAligngoal,
+//             drive::getPose
+//         );
+//     }
+// }

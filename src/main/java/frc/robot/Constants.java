@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 import edu.wpi.first.math.util.Units;
@@ -17,6 +19,8 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.units.Units.Degrees;
+
+import java.util.Map;
 import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.Amps;
@@ -117,5 +121,49 @@ public final class Constants {
         public static final Angle K_G_ANGLE_WITH_CORAL = Degrees.of(45);
         public static final double K_G = 0.45;
 
+    }
+        public static class ReefConstants {
+        public static final Map<Integer, Pose2d> REEF_alage = Map.ofEntries(
+            Map.entry(6, new Pose2d(13.75, 2.75, new Rotation2d(2.095))),
+            Map.entry(7, new Pose2d(14.45, 4.020, new Rotation2d(3.139))),
+            Map.entry(8, new Pose2d(13.75, 5.2, new Rotation2d(-2.095))),
+            Map.entry(9, new Pose2d(12.4, 5.25, new Rotation2d(-1.047))),
+            Map.entry(10, new Pose2d(11.65, 4.02, new Rotation2d(0.000))),
+            Map.entry(11, new Pose2d(12.365, 2.8, new Rotation2d(1.047))),
+            Map.entry(17, new Pose2d(3.8, 2.85, new Rotation2d(1.047))),
+            Map.entry(18, new Pose2d(3.15, 4.021, new Rotation2d(0.000))),
+            Map.entry(19, new Pose2d(3.8, 5.2, new Rotation2d(-1.047))),
+            Map.entry(20, new Pose2d(5.15, 5.2, new Rotation2d(-2.095))),
+            Map.entry(21, new Pose2d(5.85, 4.021, new Rotation2d(3.141))),
+            Map.entry(22, new Pose2d(5.15, 2.85, new Rotation2d(2.095)))
+        );
+        public static final Map<Integer, Pose2d> REEF_Left = Map.ofEntries(
+            Map.entry(6, new Pose2d(13.61, 2.755, new Rotation2d(2.095))),
+            Map.entry(7, new Pose2d(14.45, 3.8575, new Rotation2d(3.139))),
+            Map.entry(8, new Pose2d(13.893, 5.126, new Rotation2d(-2.095))),
+            Map.entry(9, new Pose2d(12.521, 5.2989, new Rotation2d(-1.047))),
+            Map.entry(10, new Pose2d(11.6972, 4.1906, new Rotation2d(0.000))),
+            Map.entry(11, new Pose2d(12.2325, 2.913, new Rotation2d(1.047))),
+            Map.entry(17, new Pose2d(3.6641 , 2.931, new Rotation2d(1.047))),
+            Map.entry(18, new Pose2d(3.1193, 4.19, new Rotation2d(0.000))),
+            Map.entry(19, new Pose2d(3.9454, 5.2894, new Rotation2d(-1.047))),
+            Map.entry(20, new Pose2d(5.3164, 5.1214, new Rotation2d(-2.095))),
+            Map.entry(21, new Pose2d(5.85, 3.8575, new Rotation2d(3.141))),
+            Map.entry(22, new Pose2d(5.0255, 2.766, new Rotation2d(2.095)))
+        );
+        public static final Map<Integer, Pose2d> REEF_Right = Map.ofEntries(
+            Map.entry(6, new Pose2d(13.8961, 2.9261, new Rotation2d(2.095))),
+            Map.entry(7, new Pose2d(14.45, 4.185, new Rotation2d(3.139))),
+            Map.entry(8, new Pose2d(13.6008, 5.28, new Rotation2d(-2.095))),
+            Map.entry(9, new Pose2d(12.2388, 5.1266, new Rotation2d(-1.047))),
+            Map.entry(10, new Pose2d(11.6972, 3.855, new Rotation2d(0.000))),
+            Map.entry(11, new Pose2d(12.5246, 2.7644, new Rotation2d(1.047))),
+            Map.entry(17, new Pose2d(3.9518 , 2.7648, new Rotation2d(1.047))),
+            Map.entry(18, new Pose2d(3.1193, 3.855, new Rotation2d(0.000))),
+            Map.entry(19, new Pose2d(3.662, 5.1251, new Rotation2d(-1.047))),
+            Map.entry(20, new Pose2d(5.0252, 5.2832, new Rotation2d(-2.095))),
+            Map.entry(21, new Pose2d(5.85, 4.185, new Rotation2d(3.141))),
+            Map.entry(22, new Pose2d(5.3237, 2.9167, new Rotation2d(2.095)))
+        );
     }
 }

@@ -24,7 +24,6 @@ public class Intake extends SubsystemBase {
     public StatusSignal<Angle> m_positionSig = intake.getPosition();
     public StatusSignal<Voltage> m_voltageSig = intake.getMotorVoltage();
 
-    private final AnalogInput IRSensor = new AnalogInput(0);
 
     public Intake() {
         this.configureMotors();
@@ -104,12 +103,5 @@ public class Intake extends SubsystemBase {
 
     public Command outAlgaeSlow() {
         return voltage(2.0);
-    }
-    public boolean isCoralIn() {
-        return this.IRSensor.getVoltage() <= 1.0 ? true : false;
-    }
-
-    public boolean isCoralout() {
-        return this.IRSensor.getVoltage() >= 1.0 ? true : false;
     }
 }

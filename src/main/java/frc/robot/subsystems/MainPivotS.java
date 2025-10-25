@@ -116,7 +116,7 @@ public class MainPivotS extends SubsystemBase {
         talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         // 馬達正反轉
-        talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
         talonFXConfigs.Feedback
                 .withFeedbackRemoteSensorID(30)// 這個 TalonFX 要讀取 ID 30 的 CANcoder 作為回饋
@@ -144,7 +144,7 @@ public class MainPivotS extends SubsystemBase {
         var CANcoderConfig = new CANcoderConfiguration();
         CANcoderConfig.MagnetSensor.MagnetOffset = ENCODER_OFFSET_ROTATIONS;// 磁力感測器的偏移量
         CANcoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = Units.degreesToRotations(250);// 絕對值感測器的不連續點(超過皆爲這個數值
-        CANcoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+        CANcoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         canEncoder.getConfigurator().apply(CANcoderConfig);
     }
 

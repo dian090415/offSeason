@@ -53,13 +53,13 @@ public class VisionFuser extends SubsystemBase {
 
   
 /** 輔助：示範 VisionConstants.SIM_CAMERA_PROPERTIES 的最小 stub（你可以在別處定義） */
-  private class VisionConstants {
+  public class VisionConstants {
     public static final Map<String, Transform3d> cameraTransforms = Map.of(
-    "RightOVCam", new Transform3d(
+    "RightOV", new Transform3d(
          new Translation3d(0.20979456, -0.13607890, 0.15952705),
           new Rotation3d(0.0, 0.0, Math.toRadians(30))
       ),
-      "LeftOVCam", new Transform3d(
+      "LeftOV", new Transform3d(
           new Translation3d(0.20979456, 0.13607890, 0.15952705),
           new Rotation3d(0.0, 0.0, Math.toRadians(-30))
       )
@@ -122,7 +122,8 @@ public class VisionFuser extends SubsystemBase {
    * - 權重平均合併 (x, y, theta)
    * - 轉成 Pose2d 與 timestamp，丟給 poseEstimator.addVisionMeasurement()
    */
-  public void update() {
+  @Override
+  public void periodic() {
     List<Pose2d> poses = new ArrayList<>();
     List<Double> weights = new ArrayList<>();//存放對應的權重（用來融合時加權平均）
     List<Double> timestamps = new ArrayList<>();//存放對應的時間戳（確保融合時能對齊時間）
@@ -135,7 +136,6 @@ public class VisionFuser extends SubsystemBase {
         //讀取apriltagid
         if (result.hasTargets()) {//檢查這一幀有沒有偵測到任何 AprilTag。
           tagId = result.getBestTarget().getFiducialId();//PhotonVision 會挑一個「最佳目標」（通常是最近、最清晰的）取得這個目標的 AprilTag ID（整數
-          apriltagId(tagId);//回傳
         }
         if (poseOpt.isEmpty()) {
           continue;
@@ -302,8 +302,8 @@ public class VisionFuser extends SubsystemBase {
     // 若相機報出的機器人 z > 0.6m 代表不合理（你的場地、相機角度會影響門檻）
     return Math.abs(z) < 0.5;
   }
-  public int apriltagId(int apriltag){
-    return apriltag;
+  public int apriltagId(){
+    return tagId;
   }
 
 }
