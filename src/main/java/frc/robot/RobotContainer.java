@@ -69,7 +69,9 @@ public class RobotContainer {
 
   private final CoralSensor coralsensor = new CoralSensor();
 
-  public  Pose2d goalPose2d;
+  public Pose2d goalPose2d;
+
+  public boolean ifmechanismreverse;
 
   private boolean isRedAlliance() {
     return DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Red);
@@ -78,7 +80,7 @@ public class RobotContainer {
   // -----------------------------------------------------------------
 
   public RobotContainer() {
-    goalPose2d =  new Pose2d(0, 0, null);
+    goalPose2d = new Pose2d(0, 0, null);
 
     this.driveToPoseCommand = new DriveToPoseCommand(
         drive,
@@ -93,7 +95,7 @@ public class RobotContainer {
         isRedAlliance(), // If alliance flipping should be enabled
         drive // The drive subsystem
     );
-
+    autoFactory.cache().clear();
     this.drive.setDefaultCommand(new NewDriveCmd(drive, main_driver, co_driver));
     // this.Swerve.setDefaultCommand(
     // new DriveCmd(
@@ -118,9 +120,12 @@ public class RobotContainer {
 
   public void configBindings() {
     this.co_driver.Intake()
-        .onTrue(this.arm.goToPosition(Arm.Positions.GROUND_CORAL))
+        .whileTrue(this.intake())
         .onFalse(this.arm.goToPosition(Arm.Positions.CORAL_STOW));
-
+    this.co_driver.LeftAilgn()
+        .whileTrue(this.LeftautochoserAlign());
+    this.co_driver.RightAilgn()
+        .whileTrue(this.RightautochoserAlign());
     this.main_driver.zeroHeading().onTrue(new InstantCommand(() -> drive.zeroHeading()));
   }
 
@@ -152,16 +157,23 @@ public class RobotContainer {
   }
 
   public Pose2d ifreverse(Pose2d goalpPose2d) {
-    Rotation2d currentRot = this.drive.getPose().getRotation();  // 機器人目前角度
+    Rotation2d currentRot = this.drive.getPose().getRotation(); // 機器人目前角度
     Rotation2d targetRotFlipped = goalpPose2d.getRotation().plus(Rotation2d.fromDegrees(180));
 
     // 計算兩個角度差的絕對值
     double diffNormal = Math.abs(currentRot.minus(goalpPose2d.getRotation()).getDegrees());
     double diffFlipped = Math.abs(currentRot.minus(targetRotFlipped).getDegrees());
 
-    Pose2d chosenRot = (diffNormal <= diffFlipped) ? goalpPose2d : new Pose2d(goalpPose2d.getX(), goalpPose2d.getY(), goalpPose2d.getRotation().plus(Rotation2d.fromDegrees(180)));
-
-    return chosenRot;
+    if (diffNormal <= diffFlipped) {
+      this.ifmechanismreverse = false;
+      return goalpPose2d;
+    } else {
+      this.ifmechanismreverse = true;
+      return new Pose2d(
+          goalpPose2d.getX(),
+          goalpPose2d.getY(),
+          goalpPose2d.getRotation().plus(Rotation2d.fromDegrees(180)));
+    }
   }
 
   public Command alageautoAlign() {
@@ -169,10 +181,10 @@ public class RobotContainer {
     if (goal == null) {
       goal = getalageClosestReefTagId(); // 沒有偵測到有效 Tag
     }
-  
+
     Pose2d finalGoal = ifreverse(goal); // lambda裡要用final或effectively final變數
     goalPose2d = ifreverse(goal);
-  
+
     return new DriveToPoseCommand(
         drive,
         () -> finalGoal,
@@ -184,10 +196,10 @@ public class RobotContainer {
     if (goal == null) {
       goal = getLeftClosestReefTagId(); // 沒有偵測到有效 Tag
     }
-  
+
     Pose2d finalGoal = ifreverse(goal); // lambda裡要用final或effectively final變數
     goalPose2d = ifreverse(goal);
-  
+
     return new DriveToPoseCommand(
         drive,
         () -> finalGoal,
@@ -199,10 +211,10 @@ public class RobotContainer {
     if (goal == null) {
       goal = getRightClosestReefTagId(); // 沒有偵測到有效 Tag
     }
-  
+
     Pose2d finalGoal = ifreverse(goal); // lambda裡要用final或effectively final變數
     goalPose2d = ifreverse(goal);
-  
+
     return new DriveToPoseCommand(
         drive,
         () -> finalGoal,
@@ -267,17 +279,25 @@ public class RobotContainer {
 
     return ReefConstants.REEF_Right.get(closestId);
   }
-  public boolean ifclosegoal(){
-    if(this.drive.getPose().getTranslation().getDistance(this.goalPose2d.getTranslation()) < 35){
+
+  public boolean ifclosegoal() {
+    if (this.drive.getPose().getTranslation().getDistance(this.goalPose2d.getTranslation()) < 35) {
       return true;
-    }else{
+    } else {
       return false;
     }
   }
 
+  public Command intake() {
+    return Commands.either(Commands.sequence(
+        this.arm.goToPosition(Arm.Positions.GROUND_CORAL), this.intake.inCoral()),
+        Commands.parallel(this.intake.stop(),
+            this.arm.goToPosition(Arm.Positions.CORAL_STOW)),
+        () -> this.coralsensor.isCoralIn());
+  }
+
   // -----------------auto---------------------------------------
   public Command autotest() {
-    autoFactory.cache().clear();
     return Commands.sequence(
         autoFactory.resetOdometry("testone"),
         autoFactory.trajectoryCmd("testone"));

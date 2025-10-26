@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class CoralSensor extends SubsystemBase{
@@ -14,5 +15,9 @@ public class CoralSensor extends SubsystemBase{
 
     public boolean isCoralout() {
         return this.IRSensor.getVoltage() >= 1.0 ? true : false;
+    }
+    @Override
+    public void periodic(){
+        SmartDashboard.putBoolean("isCoralIn", isCoralIn());
     }
 }

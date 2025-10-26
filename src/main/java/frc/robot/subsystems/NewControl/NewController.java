@@ -8,7 +8,12 @@ public class NewController extends XboxController {
     public NewController(int port) {
         super(port);
     }
-
+    public Trigger LeftAilgn(){
+        return new Trigger(this::getLeftBumperButton);
+    }
+    public Trigger RightAilgn(){
+        return new Trigger(this::getRightBumperButton);
+    }
     public Trigger zeroHeading() {
         return new Trigger(this::getAButton);
     }

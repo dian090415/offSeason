@@ -75,7 +75,7 @@ public class Head extends SubsystemBase {
         // in init function
         var talonFXConfigs = new TalonFXConfiguration();
 
-        talonFXConfigs.Slot0.withKS(K_S).withKV(K_V).withKA(K_A).withKP(50).withKD(0);
+        talonFXConfigs.Slot0.withKS(K_S).withKV(K_V).withKA(K_A).withKP(30).withKD(0);
 
         talonFXConfigs.CurrentLimits.withStatorCurrentLimitEnable(true).withStatorCurrentLimit(120)
                 .withSupplyCurrentLimitEnable(true).withSupplyCurrentLimit(60);
