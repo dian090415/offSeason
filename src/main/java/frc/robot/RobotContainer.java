@@ -80,6 +80,7 @@ public class RobotContainer {
   // -----------------------------------------------------------------
 
   public RobotContainer() {
+
     goalPose2d = new Pose2d(0, 0, null);
 
     this.driveToPoseCommand = new DriveToPoseCommand(
@@ -96,6 +97,17 @@ public class RobotContainer {
         drive // The drive subsystem
     );
     autoFactory.cache().clear();
+
+    autoFactory
+    .bind("L4 Prepare", this.autoL4Prepare())
+    .bind("L4 put", this.autoL4put())
+    .bind(" all take back",this.autoalltakeback())
+    .bind("intake down", this.autointakedown())
+    .bind("intake suck",this.autointakesuck())
+    .bind("intake stop", this.autointakestop())
+    .bind("intake up", this.autointakeup());
+
+
     this.drive.setDefaultCommand(new NewDriveCmd(drive, main_driver, co_driver));
     // this.Swerve.setDefaultCommand(
     // new DriveCmd(
@@ -301,5 +313,31 @@ public class RobotContainer {
     return Commands.sequence(
         autoFactory.resetOdometry("testone"),
         autoFactory.trajectoryCmd("testone"));
+  }
+
+  public Command autoL4Prepare() {
+    return Commands.sequence(this.arm.goToPosition(Arm.Positions.L4));
+  }
+
+  public Command autoL4put() {
+    return Commands.sequence(
+        this.intake.outCoral(),
+        Commands.waitSeconds(0.5));
+  }
+
+  public Command autoalltakeback() {
+    return Commands.parallel(this.intake.stop(),this.arm.goToPosition(Arm.Positions.CORAL_STOW));
+  }
+  public Command autointakedown() {
+    return Commands.sequence(this.arm.goToPosition(Arm.Positions.GROUND_CORAL));
+  }
+  public Command autointakesuck() {
+    return Commands.sequence(this.intake.inCoral());
+  }
+  public Command autointakestop() {
+    return Commands.sequence(this.intake.stop());
+  }
+  public Command autointakeup() {
+    return Commands.sequence(this.arm.goToPosition(Arm.Positions.CORAL_STOW));
   }
 }
