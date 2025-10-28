@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.MainPivotS;
 import frc.robot.subsystems.Elevator;
@@ -30,6 +31,7 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Arm.AbstractArm;
 import frc.robot.subsystems.Arm.AbstractArm.ArmPosition;
 import frc.robot.subsystems.Arm.Arm;
+import frc.robot.subsystems.NewControl.Controller;
 import frc.robot.subsystems.NewControl.NewController;
 import frc.robot.subsystems.NewDrive.drive;
 import frc.robot.subsystems.NewDrive.driveIOHardware;
@@ -46,6 +48,7 @@ public class RobotContainer {
 
   private final NewController main_driver = new NewController(0);
   private final NewController co_driver = new NewController(1);
+  private final Controller controller = new Controller(2);
 
   private final Elevator Elevator = new Elevator();
 
@@ -73,6 +76,8 @@ public class RobotContainer {
 
   public boolean ifmechanismreverse;
 
+  public int Level;
+
   private boolean isRedAlliance() {
     return DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Red);
   }
@@ -99,14 +104,13 @@ public class RobotContainer {
     autoFactory.cache().clear();
 
     autoFactory
-    .bind("L4 Prepare", this.autoL4Prepare())
-    .bind("L4 put", this.autoL4put())
-    .bind(" all take back",this.autoalltakeback())
-    .bind("intake down", this.autointakedown())
-    .bind("intake suck",this.autointakesuck())
-    .bind("intake stop", this.autointakestop())
-    .bind("intake up", this.autointakeup());
-
+        .bind("L4 Prepare", this.autoL4Prepare())
+        .bind("L4 put", this.autoL4put())
+        .bind(" all take back", this.autoalltakeback())
+        .bind("intake down", this.autointakedown())
+        .bind("intake suck", this.autointakesuck())
+        .bind("intake stop", this.autointakestop())
+        .bind("intake up", this.autointakeup());
 
     this.drive.setDefaultCommand(new NewDriveCmd(drive, main_driver, co_driver));
     // this.Swerve.setDefaultCommand(
@@ -138,6 +142,15 @@ public class RobotContainer {
         .whileTrue(this.LeftautochoserAlign());
     this.co_driver.RightAilgn()
         .whileTrue(this.RightautochoserAlign());
+    this.controller.L1()
+        .onTrue(this.setlevelCommand(1));
+    this.controller.L2()
+        .onTrue(this.setlevelCommand(2));
+    this.controller.L3()
+        .onTrue(this.setlevelCommand(3));
+    this.controller.L4()
+        .onTrue(this.setlevelCommand(4));
+
     this.main_driver.zeroHeading().onTrue(new InstantCommand(() -> drive.zeroHeading()));
   }
 
@@ -240,6 +253,12 @@ public class RobotContainer {
   public Command RightautochoserAlign() {
     return Commands.either(RightautoAlign(), this.alageautoAlign(), () -> this.coralsensor.isCoralIn());
   }
+  public Command Leftreef(){
+    return Commands.parallel(this.Levelreef(),this.LeftautoAlign());
+  }
+  public Command Rightreef(){
+    return Commands.parallel(this.Levelreef(),this.RightautoAlign());
+  }
 
   public Pose2d getalageClosestReefTagId() {
     double minDistance = Double.POSITIVE_INFINITY; // 初始設為無限大
@@ -293,7 +312,7 @@ public class RobotContainer {
   }
 
   public boolean ifclosegoal() {
-    if (this.drive.getPose().getTranslation().getDistance(this.goalPose2d.getTranslation()) < 35) {
+    if (this.drive.getPose().getTranslation().getDistance(this.goalPose2d.getTranslation()) < 0.35) {
       return true;
     } else {
       return false;
@@ -307,6 +326,34 @@ public class RobotContainer {
             this.arm.goToPosition(Arm.Positions.CORAL_STOW)),
         () -> this.coralsensor.isCoralIn());
   }
+
+  public void setlevel(int level) {
+    this.Level = level;
+  }
+
+  public Command setlevelCommand(int level) {
+    return Commands.runOnce(() -> setlevel(level));
+  }
+
+  public ArmPosition LevelPosition() {
+    switch (Level) {
+      case 1:
+        return Arm.Positions.L1;
+      case 2:
+        return ifmechanismreverse ? Arm.Positions.L2_OPP : Arm.Positions.L2;
+      case 3:
+        return ifmechanismreverse ? Arm.Positions.L3_OPP : Arm.Positions.L3;
+      case 4:
+        return ifmechanismreverse ? Arm.Positions.L4_OPP : Arm.Positions.L4;
+      default:
+        return null;
+    }
+  }
+
+  public Command Levelreef(){
+    return Commands.sequence(new WaitUntilCommand(() -> ifclosegoal()),this.arm.goToPosition(LevelPosition()));
+  }
+
 
   // -----------------auto---------------------------------------
   public Command autotest() {
@@ -326,17 +373,21 @@ public class RobotContainer {
   }
 
   public Command autoalltakeback() {
-    return Commands.parallel(this.intake.stop(),this.arm.goToPosition(Arm.Positions.CORAL_STOW));
+    return Commands.parallel(this.intake.stop(), this.arm.goToPosition(Arm.Positions.CORAL_STOW));
   }
+
   public Command autointakedown() {
     return Commands.sequence(this.arm.goToPosition(Arm.Positions.GROUND_CORAL));
   }
+
   public Command autointakesuck() {
     return Commands.sequence(this.intake.inCoral());
   }
+
   public Command autointakestop() {
     return Commands.sequence(this.intake.stop());
   }
+
   public Command autointakeup() {
     return Commands.sequence(this.arm.goToPosition(Arm.Positions.CORAL_STOW));
   }
