@@ -159,6 +159,9 @@ public class drive extends SubsystemBase {
     public void addVisionMeasurement(Pose2d pose) {
         this.poseEstimator.addVisionMeasurement(pose, Timer.getFPGATimestamp());
     }
+    public void OVaddVisionMeasurement(Pose2d pose , double timestampSeconds) {
+        this.poseEstimator.addVisionMeasurement(pose, timestampSeconds);
+    }
 
 
     @Override

@@ -25,12 +25,12 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.NewDrive.drive;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.math.VecBuilder;
@@ -50,6 +50,7 @@ import com.ctre.phoenix6.Utils;
  */
 public class VisionFuser extends SubsystemBase {
   private int tagId = -1;
+
 
   
 /** 輔助：示範 VisionConstants.SIM_CAMERA_PROPERTIES 的最小 stub（你可以在別處定義） */
@@ -80,7 +81,7 @@ public class VisionFuser extends SubsystemBase {
   }
 
   private final List<CamWrapper> cams = new ArrayList<>();
-  private final SwerveDrivePoseEstimator poseEstimator;
+  private drive drive;
 
   // thresholds & tuning:
   private final double borderPixels = 15.0; // 拒絕貼邊緣的角點（避免畸變/遮擋）
@@ -93,8 +94,8 @@ public class VisionFuser extends SubsystemBase {
    * @param cameraTransforms map: cameraName -> Transform3d (camera-to-robot transform)
    * @param poseEstimator    SwerveDrivePoseEstimator 實例（你用來融合 odometry + vision）
    */
-  public VisionFuser(Map<String, Transform3d> cameraTransforms, SwerveDrivePoseEstimator poseEstimator) {
-    this.poseEstimator = poseEstimator;
+  public VisionFuser(Map<String, Transform3d> cameraTransforms, drive drive) {
+    this.drive = drive;
 
     // 載入官方場地 tag 資訊 (photon pose estimator 需要 field layout)
     AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
@@ -289,10 +290,11 @@ public class VisionFuser extends SubsystemBase {
 
     // 最後把 fused pose 與對應時間戳回饋給 pose estimator
     // SwerveDrivePoseEstimator.addVisionMeasurement(Pose2d visionPose, double timestamp)
-    poseEstimator.addVisionMeasurement(fused, latestTimestamp);/*- 把融合後的姿態 fused 和對應的時間戳 latestTimestamp 傳給 SwerveDrivePoseEstimator。
+    /*poseEstimator.addVisionMeasurement(fused, latestTimestamp);- 把融合後的姿態 fused 和對應的時間戳 latestTimestamp 傳給 SwerveDrivePoseEstimator。
     - SwerveDrivePoseEstimator 會把這個「視覺觀測」和「里程計 (odometry)」融合，得到更準確的機器人位置
      */
    // optional: 若你不使用 SwerveDrivePoseEstimator，可以改成呼叫你的 drive.addVisionMeasurement(fused, latestTimestamp)
+   drive.OVaddVisionMeasurement(fused, latestTimestamp);
     
   }
 

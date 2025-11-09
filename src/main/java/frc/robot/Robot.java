@@ -24,11 +24,6 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
 
-  private final Optional<Trajectory<SwerveSample>> trajectory = Choreo.loadTrajectory("myTrajectory");
-
-    private final Timer timer = new Timer();
-
-
   private final RobotContainer m_robotContainer;
 
   /**

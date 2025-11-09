@@ -43,7 +43,7 @@ public class Intake extends SubsystemBase {
         talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         // 馬達正反轉
-        talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         talonFXConfigs.CurrentLimits
                 .withSupplyCurrentLimitEnable(true)

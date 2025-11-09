@@ -18,6 +18,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -56,9 +58,8 @@ public class RobotContainer {
   private final drive drive = new drive(driveIO);
 
   private final Vision vision = new Vision(drive);
-  private final SwerveDrivePoseEstimator poseEstimator = drive.poseEstimator();
   private final VisionFuser visionFuser = new VisionFuser(
-      VisionConstants.cameraTransforms, poseEstimator);
+      VisionConstants.cameraTransforms, drive);
 
   private final AutoFactory autoFactory;
 
@@ -81,6 +82,8 @@ public class RobotContainer {
   private boolean isRedAlliance() {
     return DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Red);
   }
+
+  private final Field2d field = new Field2d();
 
   // -----------------------------------------------------------------
 
@@ -106,7 +109,7 @@ public class RobotContainer {
     autoFactory
         .bind("L4 Prepare", this.autoL4Prepare())
         .bind("L4 put", this.autoL4put())
-        .bind(" all take back", this.autoalltakeback())
+        .bind("all take back", this.autoalltakeback())
         .bind("intake down", this.autointakedown())
         .bind("intake suck", this.autointakesuck())
         .bind("intake stop", this.autointakestop())
@@ -136,8 +139,8 @@ public class RobotContainer {
 
   public void configBindings() {
     this.co_driver.Intake()
-        .whileTrue(this.intake())
-        .onFalse(this.arm.goToPosition(Arm.Positions.CORAL_STOW));
+        .onTrue(this.intake())
+        .onFalse(this.intakestop());
     this.co_driver.LeftAilgn()
         .whileTrue(this.LeftautochoserAlign());
     this.co_driver.RightAilgn()
@@ -152,6 +155,7 @@ public class RobotContainer {
         .onTrue(this.setlevelCommand(4));
 
     this.main_driver.zeroHeading().onTrue(new InstantCommand(() -> drive.zeroHeading()));
+    this.co_driver.zeroHeading().onTrue(new InstantCommand(() -> drive.zeroHeading()));
   }
 
   public Command getAutonomousCommand() {
@@ -191,9 +195,16 @@ public class RobotContainer {
 
     if (diffNormal <= diffFlipped) {
       this.ifmechanismreverse = false;
+      field.getObject("goalGoal").setPose(goalpPose2d);
+      SmartDashboard.putData("Field", field);
       return goalpPose2d;
     } else {
       this.ifmechanismreverse = true;
+      field.getObject("goalGoal").setPose(new Pose2d(
+        goalpPose2d.getX(),
+        goalpPose2d.getY(),
+        goalpPose2d.getRotation().plus(Rotation2d.fromDegrees(180))));
+      SmartDashboard.putData("Field", field);
       return new Pose2d(
           goalpPose2d.getX(),
           goalpPose2d.getY(),
@@ -208,7 +219,6 @@ public class RobotContainer {
     }
 
     Pose2d finalGoal = ifreverse(goal); // lambda裡要用final或effectively final變數
-    goalPose2d = ifreverse(goal);
 
     return new DriveToPoseCommand(
         drive,
@@ -223,7 +233,6 @@ public class RobotContainer {
     }
 
     Pose2d finalGoal = ifreverse(goal); // lambda裡要用final或effectively final變數
-    goalPose2d = ifreverse(goal);
 
     return new DriveToPoseCommand(
         drive,
@@ -238,7 +247,6 @@ public class RobotContainer {
     }
 
     Pose2d finalGoal = ifreverse(goal); // lambda裡要用final或effectively final變數
-    goalPose2d = ifreverse(goal);
 
     return new DriveToPoseCommand(
         drive,
@@ -247,17 +255,19 @@ public class RobotContainer {
   }
 
   public Command LeftautochoserAlign() {
-    return Commands.either(LeftautoAlign(), this.alageautoAlign(), () -> this.coralsensor.isCoralIn());
+    return Commands.either(Leftreef(), this.alageautoAlign(), () -> this.coralsensor.isCoralIn());
   }
 
   public Command RightautochoserAlign() {
-    return Commands.either(RightautoAlign(), this.alageautoAlign(), () -> this.coralsensor.isCoralIn());
+    return Commands.either(Rightreef(), this.alageautoAlign(), () -> this.coralsensor.isCoralIn());
   }
-  public Command Leftreef(){
-    return Commands.parallel(this.Levelreef(),this.LeftautoAlign());
+
+  public Command Leftreef() {
+    return Commands.parallel(this.Levelreef(), this.LeftautoAlign());
   }
-  public Command Rightreef(){
-    return Commands.parallel(this.Levelreef(),this.RightautoAlign());
+
+  public Command Rightreef() {
+    return Commands.parallel(this.Levelreef(), this.RightautoAlign());
   }
 
   public Pose2d getalageClosestReefTagId() {
@@ -320,11 +330,16 @@ public class RobotContainer {
   }
 
   public Command intake() {
-    return Commands.either(Commands.sequence(
-        this.arm.goToPosition(Arm.Positions.GROUND_CORAL), this.intake.inCoral()),
-        Commands.parallel(this.intake.stop(),
-            this.arm.goToPosition(Arm.Positions.CORAL_STOW)),
+    return Commands.either(
+        this.intakestop(),
+        Commands.parallel(
+            this.arm.goToPosition(Arm.Positions.GROUND_CORAL),
+            this.intake.inCoral().until(() -> this.coralsensor.isCoralIn()).andThen(this.intake.stop())),
         () -> this.coralsensor.isCoralIn());
+  }
+
+  public Command intakestop() {
+    return Commands.parallel(this.arm.goToPosition(Arm.Positions.CORAL_STOW), this.intake.stop());
   }
 
   public void setlevel(int level) {
@@ -350,10 +365,9 @@ public class RobotContainer {
     }
   }
 
-  public Command Levelreef(){
-    return Commands.sequence(new WaitUntilCommand(() -> ifclosegoal()),this.arm.goToPosition(LevelPosition()));
+  public Command Levelreef() {
+    return Commands.sequence(new WaitUntilCommand(() -> ifclosegoal()), this.arm.goToPosition(LevelPosition()));
   }
-
 
   // -----------------auto---------------------------------------
   public Command autotest() {
@@ -363,6 +377,7 @@ public class RobotContainer {
   }
 
   public Command autoL4Prepare() {
+    SmartDashboard.putBoolean("autoL4Preparerun", true);
     return Commands.sequence(this.arm.goToPosition(Arm.Positions.L4));
   }
 

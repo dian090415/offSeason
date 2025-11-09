@@ -56,8 +56,8 @@ public abstract class AbstractArm {
 
   public class Positions {
     // NEW HAND
-    public static final ArmPosition GROUND_CORAL = new ArmPosition(Degrees.of(5), ElevatorConstants.MIN_LENGTH,
-        Degrees.of(-5.1));
+    public static final ArmPosition GROUND_CORAL = new ArmPosition(Degrees.of(4), ElevatorConstants.MIN_LENGTH,
+        Degrees.of(-52));
     public static final ArmPosition GROUND_ALGAE = new ArmPosition(Degrees.of(11.5),  Meters.of(0.75),
         Degrees.of(-70));
     public static final ArmPosition WALL_INTAKE_CORAL = new ArmPosition(Degrees.of(69.4), Meters.of(0.814),

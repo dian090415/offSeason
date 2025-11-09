@@ -51,7 +51,7 @@ public class MainPivotS extends SubsystemBase {
     // -----------------------------------新程式-------------------------------------------------
 
     public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 79.3651 * 14.0 / 9.0;
-    public static final double ENCODER_OFFSET_ROTATIONS = 0.12109375 + 0.125; // = 0.24609375//encoder偏差值？？？
+    public static final double ENCODER_OFFSET_ROTATIONS = 0.24609375 + 0.02916666667; // = //encoder偏差值？？？0.12109375 + 0.125   0.26171875
     public static final double K_V = 12.0 / (100 / MOTOR_ROTATIONS_PER_ARM_ROTATION);// 計算前餽公式
     public static final double K_A = 0.25 /* v/oldRot/s^2 */ * 9.0 / 14.0; /* newRot/oldRot */// 原本轉換成機櫃
     public static final Angle CCW_LIMIT = Degrees.of(110);// 角度限制(wpi打包模式
@@ -89,22 +89,22 @@ public class MainPivotS extends SubsystemBase {
 
     // ----------------------------------------------------新code---------------------------------------------------------------------------
 
+
     private void configureMotors() {
         // in init function
         var talonFXConfigs = new TalonFXConfiguration();
-
         // set slot 0 gains
         var slot0Configs = talonFXConfigs.Slot0;
         slot0Configs.kS = 0.1; // Add 0.25 V output to overcome static friction
         slot0Configs.kV = K_V; // A velocity target of 1 rps results in 0.12 V output
         slot0Configs.kA = K_A; // An acceleration of 1 rps/s requires 0.01 V output
-        slot0Configs.kP = 40.0; // A position error of 2.5 rotations results in 12 V output
+        slot0Configs.kP = 140.0; // A position error of 2.5 rotations results in 12 V output
         slot0Configs.kD = 0.4; // A velocity error of 1 rps results in 0.1 V output
         slot0Configs.withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);// 使用閉迴路誤差的方向來決定 kS 正負號
 
         talonFXConfigs.MotionMagic
-                .withMotionMagicCruiseVelocity(0.5)// 巡航
-                .withMotionMagicAcceleration(0.66);// 加速度
+                .withMotionMagicCruiseVelocity(0.5)// 巡航1
+                .withMotionMagicAcceleration(0.66);// 加速度4
 
         // 電流限制
         talonFXConfigs.CurrentLimits.withStatorCurrentLimitEnable(true)
@@ -148,40 +148,40 @@ public class MainPivotS extends SubsystemBase {
         canEncoder.getConfigurator().apply(CANcoderConfig);
     }
 
-    // Motion Magic 移動
-    public void moveTo(double targetPosition) {
-        SmartDashboard.putBoolean("armmove", true);
-        lMain.setControl(motionMagic.withPosition(targetPosition));
-    }
+    // // Motion Magic 移動
+    // public void moveTo(double targetPosition) {
+    //     SmartDashboard.putBoolean("armmove", true);
+    //     lMain.setControl(motionMagic.withPosition(targetPosition));
+    // }
 
-    public void pidmove(double position) {
-        this.lMain.setVoltage(this.pidController.calculate(this.lMain.getPosition().getValueAsDouble(), position));
-    }
+    // public void pidmove(double position) {
+    //     this.lMain.setVoltage(this.pidController.calculate(this.lMain.getPosition().getValueAsDouble(), position));
+    // }
 
-    public double encoder() {
-        return lMain.getPosition().getValueAsDouble();
-    }
+    // public double encoder() {
+    //     return lMain.getPosition().getValueAsDouble();
+    // }
 
-    public Command moveToCommand(double targetPosition) {
-        return run(() -> moveTo(targetPosition));
-    }
+    // public Command moveToCommand(double targetPosition) {
+    //     return run(() -> moveTo(targetPosition));
+    // }
 
-    public void setVoltage(double speed) {
-        speed = MathUtil.clamp(speed, -12, 12);
-        lMain.setVoltage(speed);
-    }
+    // public void setVoltage(double speed) {
+    //     speed = MathUtil.clamp(speed, -12, 12);
+    //     lMain.setVoltage(speed);
+    // }
 
-    public void stop() {
-        lMain.stopMotor();
-    }
+    // public void stop() {
+    //     lMain.stopMotor();
+    // }
 
-    public boolean armatgoal(double position) {
-        if (Math.abs(position - this.encoder()) <= 2.5) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+    // public boolean armatgoal(double position) {
+    //     if (Math.abs(position - this.encoder()) <= 2.5) {
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
     // -------新code------------------------------
 
