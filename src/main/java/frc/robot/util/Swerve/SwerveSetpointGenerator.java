@@ -132,6 +132,7 @@ public class SwerveSetpointGenerator {
     return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
   }
 
+  // find the maxmium speed for the swere drive. Input: x_0: location, must be 
   protected double findDriveMaxS(
       double x_0,
       double y_0,

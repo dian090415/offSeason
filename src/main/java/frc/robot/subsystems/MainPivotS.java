@@ -98,7 +98,7 @@ public class MainPivotS extends SubsystemBase {
         slot0Configs.kS = 0.1; // Add 0.25 V output to overcome static friction
         slot0Configs.kV = K_V; // A velocity target of 1 rps results in 0.12 V output
         slot0Configs.kA = K_A; // An acceleration of 1 rps/s requires 0.01 V output
-        slot0Configs.kP = 140.0; // A position error of 2.5 rotations results in 12 V output
+        slot0Configs.kP = 38.0; // A position error of 2.5 rotations results in 12 V output
         slot0Configs.kD = 0.4; // A velocity error of 1 rps results in 0.1 V output
         slot0Configs.withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);// 使用閉迴路誤差的方向來決定 kS 正負號
 
@@ -241,7 +241,5 @@ public class MainPivotS extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("armCancoder", canEncoder.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("armMotor", lMain.getPosition().getValueAsDouble());
     }
 }

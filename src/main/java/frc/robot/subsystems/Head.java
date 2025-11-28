@@ -2,11 +2,16 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.controls.VoltageOut;
+
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -30,151 +35,172 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.WristConstants;
 
-
 public class Head extends SubsystemBase {
-    private final MotionMagicVoltage headvolt = new MotionMagicVoltage(0.0);
+  private final MotionMagicVoltage headvolt = new MotionMagicVoltage(0.0);
 
-    private final TalonFX head = new TalonFX(20);
-    // private final TalonFX intake = new TalonFX(21);
-    private final double metersPerangle = (1 / 0.0263671875) * (1 / 360);// 馬達一圈轉0.026圈*360
-    private final MotionMagicExpoVoltage m_request = new MotionMagicExpoVoltage(0);
-    // private final AnalogInput IRSensor = new AnalogInput(0);
-    // -------------------新code---------------------
-    public static final double K_S = 0;
-    public static final double K_V = 4.548;
-    public static final double K_A = 0.2 * 0.45 / 0.25;
-    public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 48.0 / 9.0 * 40.0 / 15.0 * 40.0 / 15.0;
-    public static final Angle CCW_LIMIT = Degrees.of(146.8);
-    public static final Angle CW_LIMIT = Degrees.of(-70);
-    private MotionMagicVoltage m_profileReq = new MotionMagicVoltage(0);
-    private StatusSignal<Angle> m_angleSig = head.getPosition();
-    private StatusSignal<AngularVelocity> m_velocitySig = head.getVelocity();
-    private StatusSignal<Double> m_setpointSig = head.getClosedLoopReference();// 取得目前閉環控制器的 目標值 (setpoint)
-    private StatusSignal<Current> m_currentSig = head.getStatorCurrent();// 取得馬達的 定子電流（流經馬達線圈的電流）
-    private double m_goalRotations;
-    public static final Angle K_G_ANGLE = Degrees.of(35.06);//Rotations.of(-0.072);
-    public static final Angle K_G_ANGLE_WITH_CORAL = Degrees.of(45);
-    public static final double K_G = 0.45;
-    private DoubleSupplier m_mainAngleSupplier = () -> 0;
-    private VoltageOut m_voltageReq = new VoltageOut(0);
-    public void setMainAngleSupplier(DoubleSupplier mainAngleSupplier) {
-        m_mainAngleSupplier = mainAngleSupplier;
-      }
+  private final TalonFX head = new TalonFX(20);
+  // private final TalonFX intake = new TalonFX(21);
+  private final double metersPerangle = (1 / 0.0263671875) * (1 / 360);// 馬達一圈轉0.026圈*360
+  private final MotionMagicExpoVoltage m_request = new MotionMagicExpoVoltage(0);
+  // private final AnalogInput IRSensor = new AnalogInput(0);
+  // -------------------新code---------------------
+  public static final double K_S = 0;
+  public static final double K_V = 4.0509;
+  public static final double K_A = 0.30617;
+  public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 48.0 / 9.0 * 40.0 / 15.0 * 40.0 / 15.0;
+  public static final Angle CCW_LIMIT = Degrees.of(146.8);
+  public static final Angle CW_LIMIT = Degrees.of(-70);
+  private MotionMagicVoltage m_profileReq = new MotionMagicVoltage(0);
+  private StatusSignal<Angle> m_angleSig = head.getPosition();
+  private StatusSignal<AngularVelocity> m_velocitySig = head.getVelocity();
+  private StatusSignal<Double> m_setpointSig = head.getClosedLoopReference();// 取得目前閉環控制器的 目標值 (setpoint)
+  private StatusSignal<Current> m_currentSig = head.getStatorCurrent();// 取得馬達的 定子電流（流經馬達線圈的電流）
+  private double m_goalRotations;
+  public static final Angle K_G_ANGLE = Degrees.of(35.06);// Rotations.of(-0.072);
+  public static final Angle K_G_ANGLE_WITH_CORAL = Degrees.of(45);
+  public static final double K_G = 0.45;
+  private DoubleSupplier m_mainAngleSupplier = () -> 0;
+  private VoltageOut m_voltageReq = new VoltageOut(0);
 
-    public Head() {
-        this.Config();//刷入馬達設定
-        m_setpointSig.setUpdateFrequency(50);// 設定roborio刷新頻率
-        m_currentSig.setUpdateFrequency(50);// 設定roborio刷新頻率
-        // setDefaultCommand(hold());
-        this.head.getConfigurator().setPosition(WristConstants.CW_LIMIT);
-    }
+  private final VoltageOut voltagRequire = new VoltageOut(0.0);
+  private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
+      new SysIdRoutine.Config(Volts.of(0.25).per(Second), Volts.of(1),
+          null, (state) -> SignalLogger.writeString("state", state.toString())),
+      new SysIdRoutine.Mechanism(
+          (volts) -> {
+            this.head.setControl(voltagRequire.withOutput(volts.in(Volts)));
+          },
+          null,
+          this));
 
-    public void Config() {
-        // in init function
-        var talonFXConfigs = new TalonFXConfiguration();
+  public void setMainAngleSupplier(DoubleSupplier mainAngleSupplier) {
+    m_mainAngleSupplier = mainAngleSupplier;
+  }
 
-        talonFXConfigs.Slot0.withKS(K_S).withKV(K_V).withKA(K_A).withKP(30).withKD(0);
+  public Head() {
+    this.Config();// 刷入馬達設定
+    m_setpointSig.setUpdateFrequency(50);// 設定roborio刷新頻率
+    m_currentSig.setUpdateFrequency(50);// 設定roborio刷新頻率
+    // setDefaultCommand(hold());
+    this.head.getConfigurator().setPosition(WristConstants.CW_LIMIT);
+  }
 
-        talonFXConfigs.CurrentLimits.withStatorCurrentLimitEnable(true).withStatorCurrentLimit(120)
-                .withSupplyCurrentLimitEnable(true).withSupplyCurrentLimit(60);
+  public void Config() {
+    // in init function
+    var talonFXConfigs = new TalonFXConfiguration();
 
-        talonFXConfigs.MotionMagic.withMotionMagicCruiseVelocity(1).withMotionMagicAcceleration(2.8);
+    talonFXConfigs.Slot0.withKS(K_S).withKV(K_V).withKA(K_A).withKP(30).withKD(0);
 
-        talonFXConfigs.Feedback
-                // .withFeedbackRemoteSensorID(34)
-                // .withFeedbackSensorSource(FeedbackSensorSourceValue.SyncCANcoder)
-                .withSensorToMechanismRatio(MOTOR_ROTATIONS_PER_ARM_ROTATION);
+    talonFXConfigs.CurrentLimits.withStatorCurrentLimitEnable(true).withStatorCurrentLimit(120)
+        .withSupplyCurrentLimitEnable(true).withSupplyCurrentLimit(60);
 
-        talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        talonFXConfigs.SoftwareLimitSwitch.withForwardSoftLimitEnable(false)
-                .withForwardSoftLimitThreshold(CCW_LIMIT)
-                .withReverseSoftLimitThreshold(CW_LIMIT)
-                .withReverseSoftLimitEnable(false);
-        talonFXConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+    talonFXConfigs.MotionMagic.withMotionMagicCruiseVelocity(1).withMotionMagicAcceleration(2.8);
 
-        head.getConfigurator().apply(talonFXConfigs);
-        // intake.getConfigurator().apply(talonFXConfigs);
-    }
+    talonFXConfigs.Feedback
+        // .withFeedbackRemoteSensorID(34)
+        // .withFeedbackSensorSource(FeedbackSensorSourceValue.SyncCANcoder)
+        .withSensorToMechanismRatio(MOTOR_ROTATIONS_PER_ARM_ROTATION);
 
-    // public void Magicgo(double Position) {
-    //     head.setControl(m_request.withPosition(Position));
-    // }
+    talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    talonFXConfigs.SoftwareLimitSwitch.withForwardSoftLimitEnable(false)
+        .withForwardSoftLimitThreshold(CCW_LIMIT)
+        .withReverseSoftLimitThreshold(CW_LIMIT)
+        .withReverseSoftLimitEnable(false);
+    talonFXConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
 
-    // public Command magicgocCommand(double Position) {
-    //     return run(() -> this.Magicgo(Position));
-    // }
+    head.getConfigurator().apply(talonFXConfigs);
+    // intake.getConfigurator().apply(talonFXConfigs);
+  }
 
-    // public Command coarlintakeexecute() {
-    //     return Commands.sequence(
-    //             Commands.run(() -> this.intakexcute(4), this),
-    //             new WaitCommand(0.75),
-    //             Commands.run(() -> this.intakexcute(7), this),
-    //             new WaitCommand(0.75));
-    // }
+  // public void Magicgo(double Position) {
+  // head.setControl(m_request.withPosition(Position));
+  // }
 
-    // public Command alagelintakeexecute() {
-    //     return Commands.run(() -> this.intakexcute(-7), this);
-    // }
+  // public Command magicgocCommand(double Position) {
+  // return run(() -> this.Magicgo(Position));
+  // }
 
-    // public Command alageput() {
-    //     return Commands.runEnd(() -> this.intakexcute(7), this::intakestop, this);
-    // }
+  // public Command coarlintakeexecute() {
+  // return Commands.sequence(
+  // Commands.run(() -> this.intakexcute(4), this),
+  // new WaitCommand(0.75),
+  // Commands.run(() -> this.intakexcute(7), this),
+  // new WaitCommand(0.75));
+  // }
 
-    // public Command intakebackexecute() {
-    //     return Commands.runEnd(() -> this.intakebackexcute(), this::intakestop, this);
-    // }
+  // public Command alagelintakeexecute() {
+  // return Commands.run(() -> this.intakexcute(-7), this);
+  // }
 
-    // public Command intakeputcmd() {
-    //     return Commands.runEnd(() -> this.intakeput(), this::intakestop, this);
-    // }
+  // public Command alageput() {
+  // return Commands.runEnd(() -> this.intakexcute(7), this::intakestop, this);
+  // }
 
-    // public Command intakestopCmd() {
-    //     return Commands.run(() -> this.intakestop(), this);
-    // }
+  // public Command intakebackexecute() {
+  // return Commands.runEnd(() -> this.intakebackexcute(), this::intakestop,
+  // this);
+  // }
 
-    // public void intakestop() {
-    //     this.intake.setVoltage(0.0);
-    // }
+  // public Command intakeputcmd() {
+  // return Commands.runEnd(() -> this.intakeput(), this::intakestop, this);
+  // }
 
-    // public void headstop() {
-    //     this.head.stopMotor();
-    // }
+  // public Command intakestopCmd() {
+  // return Commands.run(() -> this.intakestop(), this);
+  // }
 
-    // public void intakexcute(double volt) {
-    //     this.intake.setVoltage(volt);
-    // }
+  // public void intakestop() {
+  // this.intake.setVoltage(0.0);
+  // }
 
-    // public void intakebackexcute() {
-    //     this.intake.setVoltage(-1);
-    // }
+  // public void headstop() {
+  // this.head.stopMotor();
+  // }
 
-    // public void intakeput() {
-    //     this.intake.setVoltage(-6);
-    // }
+  // public void intakexcute(double volt) {
+  // this.intake.setVoltage(volt);
+  // }
 
-    // public void intakesetVoltage(double volt) {
-    //     this.intake.setVoltage(volt);
-    // }
+  // public void intakebackexcute() {
+  // this.intake.setVoltage(-1);
+  // }
 
-    // public boolean isCoralIn() {
-    //     return this.IRSensor.getVoltage() <= 1.0 ? true : false;
-    // }
+  // public void intakeput() {
+  // this.intake.setVoltage(-6);
+  // }
 
-    // public boolean isCoralout() {
-    //     return this.IRSensor.getVoltage() >= 1.0 ? true : false;
-    // }
+  // public void intakesetVoltage(double volt) {
+  // this.intake.setVoltage(volt);
+  // }
 
-    //-----------------新code----------------------
-    public double setpoint() {
-        m_setpointSig.refresh();
-        return m_setpointSig.getValueAsDouble();
-      }
-      public Command home() {
-        return this.runOnce(()->head.getConfigurator().setPosition(CW_LIMIT)).ignoringDisable(true);//ignoringDisable(true)即使 DriverStation 是 Disabled 狀態，這個 command 也會執行（因為這個操作只是在軟體上校正 encoder，沒有真的驅動馬達）
-      }
-        public double getAngleRotations() {
+  // public boolean isCoralIn() {
+  // return this.IRSensor.getVoltage() <= 1.0 ? true : false;
+  // }
+
+  // public boolean isCoralout() {
+  // return this.IRSensor.getVoltage() >= 1.0 ? true : false;
+  // }
+
+  // -----------------新code----------------------
+  public double setpoint() {
+    m_setpointSig.refresh();
+    return m_setpointSig.getValueAsDouble();
+  }
+
+  public Command home() {
+    return this.runOnce(() -> head.getConfigurator().setPosition(CW_LIMIT)).ignoringDisable(true);// ignoringDisable(true)即使
+                                                                                                  // DriverStation 是
+                                                                                                  // Disabled 狀態，這個
+                                                                                                  // command
+                                                                                                  // 也會執行（因為這個操作只是在軟體上校正
+                                                                                                  // encoder，沒有真的驅動馬達）
+  }
+
+  public double getAngleRotations() {
     return m_angleSig.getValueAsDouble();
   }
 
@@ -183,7 +209,7 @@ public class Head extends SubsystemBase {
   }
 
   public double getKgVolts() {
-    return Math.cos(getAngleRadians() - K_G_ANGLE.in(Radians) + m_mainAngleSupplier.getAsDouble())* K_G;
+    return Math.cos(getAngleRadians() - K_G_ANGLE.in(Radians) + m_mainAngleSupplier.getAsDouble()) * K_G;
   }
 
   public void setAngleRadians(double angle) {
@@ -209,14 +235,49 @@ public class Head extends SubsystemBase {
   }
 
   public Command hold() {
-    return sequence(runOnce(() -> setAngleRadians(getAngleRadians())), Commands.idle());//Commands.idle()  進入一個「什麼都不做，但永遠不會結束」的狀態
+    return sequence(runOnce(() -> setAngleRadians(getAngleRadians())), Commands.idle());// Commands.idle()
+                                                                                     // 進入一個「什麼都不做，但永遠不會結束」的狀態
   }
-
-    @Override
-    public void periodic() {
-        BaseStatusSignal.refreshAll(m_currentSig, m_angleSig);//一次性向馬達控制器請求 最新的狀態數據
-        if (DriverStation.isDisabled()) {
-            head.set(0);
-        }
+      public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return this.sysIdRoutine.quasistatic(direction);
     }
+
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return this.sysIdRoutine.dynamic(direction);
+    }
+
+    public Command startCommand() {
+        return Commands.runOnce(SignalLogger::start);
+    }
+
+    public Command stopCommand() {
+        return Commands.runOnce(SignalLogger::stop);
+    }
+
+    public Command sysIdElevatorTest() {
+        return Commands.sequence(
+                this.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+                        .raceWith(new WaitUntilCommand(() -> this.getAngleRadians() > 0.3)),
+                new WaitCommand(1.5),
+
+                this.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
+                        .raceWith(new WaitUntilCommand(() -> this.getAngleRadians() < -0.19)),
+                new WaitCommand(1.5),
+
+                this.sysIdDynamic(SysIdRoutine.Direction.kForward)
+                        .raceWith(new WaitUntilCommand(() -> this.getAngleRadians() > 0.3)),
+                new WaitCommand(1.5),
+
+                this.sysIdDynamic(SysIdRoutine.Direction.kReverse)
+                        .raceWith(new WaitUntilCommand(() -> this.getAngleRadians() < -0.19)));
+    }
+
+  @Override
+  public void periodic() {
+    BaseStatusSignal.refreshAll(m_currentSig, m_angleSig);// 一次性向馬達控制器請求 最新的狀態數據
+    if (DriverStation.isDisabled()) {
+      head.set(0);
+    SmartDashboard.putNumber("alage", this.getAngleRotations());
+    }
+  }
 }

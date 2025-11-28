@@ -17,13 +17,31 @@ public class NewController extends XboxController {
     public Trigger zeroHeading() {
         return new Trigger(this::getAButton);
     }
-    public Trigger test() {
-        return new Trigger(this::getAButton);
-    }
     public Trigger Intake(){
         return new Trigger(this::getintakeTrigger);
     }
     public boolean getintakeTrigger() {
         return this.getLeftTriggerAxis() >= 0.3 ? true : false;
     }
+    public Trigger put(){
+        return new Trigger(this::getputTrigger);
+    }
+    public boolean getputTrigger() {
+        return this.getRightTriggerAxis() >= 0.3 ? true : false;
+    }
+    public Trigger Intakemodel(){
+        return new Trigger(this::getXButton);
+    }
+    // public Trigger L4() {
+    //     return new Trigger(this::getYButton);
+    // }
+    // public Trigger L3() {
+    //     return new Trigger(this::getXButton);
+    // }
+    // public Trigger L2() {
+    //     return new Trigger(this::getBButton);
+    // }
+    // public Trigger L1() {
+    //     return new Trigger(this::getAButton);
+    // }
 }

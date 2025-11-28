@@ -14,6 +14,7 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -96,6 +97,9 @@ public class Intake extends SubsystemBase {
     public Command inAlgae() {
         return voltage(-10.0);
     }
+    public Command keepAlgae() {
+        return voltage(-5.0);
+    }
 
     public Command outAlgae() {
         return voltage(10);// HandConstants.OUT_ALGAE_VOLTAGE);
@@ -103,5 +107,13 @@ public class Intake extends SubsystemBase {
 
     public Command outAlgaeSlow() {
         return voltage(2.0);
+    }
+    public boolean isalagein(){
+        return (this.intake.getStatorCurrent().getValueAsDouble() > 11) ? true : false ;
+    }
+    @Override
+    public void periodic() {
+        SmartDashboard.putNumber("intakeStatorCurrent", this.intake.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putBoolean("isalagein", isalagein());
     }
 }

@@ -3,6 +3,7 @@ package frc.robot.subsystems.NewDrive;
 import org.littletonrobotics.junction.Logger;
 
 import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -10,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -33,7 +35,6 @@ public class drive extends SubsystemBase {
     private final Field2d field;
 
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(DriveConstants.autoLocations);
-
 
     private final SwerveSetpointGenerator swerveSetpointGenerator;
 
@@ -60,7 +61,16 @@ public class drive extends SubsystemBase {
                 this.kinematics,
                 io.getRotation2d(),
                 this.io.getModulePositions(),
-                initialPose);
+                initialPose,
+
+                // 1. 狀態標準差 (State Std Devs) - 信任里程計 (Odometry) 的程度
+                // 設小一點 (0.1)，代表我們很信任輪子和陀螺儀
+                VecBuilder.fill(0.1, 0.1, 0.1),
+
+                // 2. 視覺標準差 (Vision Std Devs) - 信任相機的程度
+                // 為了測試，我們先設得非常小 (0.1)，強迫它相信相機！
+                // 之後調校時可以改回 0.5 或 0.9
+                VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(10)));
 
         this.swerveSetpointGenerator = new SwerveSetpointGenerator(
                 this.kinematics,
@@ -68,33 +78,31 @@ public class drive extends SubsystemBase {
 
         this.field = new Field2d();
 
-
-
         io.zeroHeading();
         io.resetEncoders();
         headingController.enableContinuousInput(-Math.PI, Math.PI);
     }
-    public SwerveDrivePoseEstimator poseEstimator(){
+
+    public SwerveDrivePoseEstimator poseEstimator() {
         return poseEstimator;
     }
 
-        public static drive getinDrive(){
-            if(autodrive == null){
-                autodrive = new drive(null);
-            }
-                return autodrive;
-            }
+    public static drive getinDrive() {
+        if (autodrive == null) {
+            autodrive = new drive(null);
+        }
+        return autodrive;
+    }
 
-        public void followTrajectory(SwerveSample sample) {
+    public void followTrajectory(SwerveSample sample) {
         // Get the current pose of the robot
         Pose2d pose = poseEstimator.getEstimatedPosition();
 
         // Generate the next speeds for the robot
         ChassisSpeeds speeds = new ChassisSpeeds(
-            sample.vx + xController.calculate(pose.getX(), sample.x),
-            sample.vy + yController.calculate(pose.getY(), sample.y),
-            sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading)
-        );
+                sample.vx + xController.calculate(pose.getX(), sample.x),
+                sample.vy + yController.calculate(pose.getY(), sample.y),
+                sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
         // Apply the generated speeds
         autoVelocity(speeds);
@@ -120,6 +128,32 @@ public class drive extends SubsystemBase {
         Logger.recordOutput("Drive/SwerveStates/Setpoints", setpointStates);
         Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
 
+        this.io.setModuleStates(setpointStates);
+    }
+    public void autorunVelocity(ChassisSpeeds robotRelativeSpeeds) { // 參數名稱改一下比較清楚
+
+        // ❌ 刪除這行！不要在這裡做座標轉換
+        // ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, io.getRotation2d());
+    
+        // ✅ 直接使用傳進來的 speeds (假設已經是機器人相對座標)
+        // 這裡做 discretize 是對的 (修正飄移)
+        ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
+    
+        // ... 後面的邏輯保持不變 ...
+        SwerveModuleState[] SetPointStatesUnoptimized = kinematics.toSwerveModuleStates(discreteSpeeds);
+    
+        currentSetpoint = swerveSetpointGenerator.generateSetpoint(
+                DriveConstants.moduleLimitsFree,
+                currentSetpoint,
+                discreteSpeeds,
+                0.02);
+    
+        SwerveModuleState[] setpointStates = currentSetpoint.moduleStates();
+    
+        Logger.recordOutput("Drive/SwerveStates/SetpointsUnoptimized", SetPointStatesUnoptimized);
+        Logger.recordOutput("Drive/SwerveStates/Setpoints", setpointStates);
+        Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
+    
         this.io.setModuleStates(setpointStates);
     }
 
@@ -159,10 +193,11 @@ public class drive extends SubsystemBase {
     public void addVisionMeasurement(Pose2d pose) {
         this.poseEstimator.addVisionMeasurement(pose, Timer.getFPGATimestamp());
     }
-    public void OVaddVisionMeasurement(Pose2d pose , double timestampSeconds) {
-        this.poseEstimator.addVisionMeasurement(pose, timestampSeconds);
-    }
 
+    public void OVaddVisionMeasurement(Pose2d pose, double timestampSeconds) {
+        this.poseEstimator.addVisionMeasurement(pose,
+                timestampSeconds);
+    }
 
     @Override
     public void periodic() {
@@ -173,11 +208,9 @@ public class drive extends SubsystemBase {
                 io.getRotation2d(),
                 this.io.getModulePositions());
 
-
-        double[] pose = {poseEstimator.getEstimatedPosition().getX(), 
-                        poseEstimator.getEstimatedPosition().getY(), 
-                        Math.toRadians(io.getHeading())};
-
+        double[] pose = { poseEstimator.getEstimatedPosition().getX(),
+                poseEstimator.getEstimatedPosition().getY(),
+                Math.toRadians(io.getHeading()) };
 
         SmartDashboard.putNumberArray("Pose", pose);
 

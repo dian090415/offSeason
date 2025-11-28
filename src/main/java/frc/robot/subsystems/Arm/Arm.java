@@ -110,9 +110,9 @@ public class Arm extends AbstractArm {
             DoubleSupplier mainPivotRadians) {
         return wristS.goTo(
                 () -> {
-                    double dontGoIntoBumperMinLimit = mainPivotRadians.getAsDouble() < Units.degreesToRadians(17)
-                            || mainPivotS.getAngleRadians() < Units.degreesToRadians(17)
-                                    ? Units.degreesToRadians(-10)
+                    double dontGoIntoBumperMinLimit = mainPivotRadians.getAsDouble() < Units.degreesToRadians(10)
+                            || mainPivotS.getAngleRadians() < Units.degreesToRadians(10)
+                                    ? Units.degreesToRadians(-15)
                                     : WristConstants.CW_LIMIT.in(Radians);
                     double dontGoIntoElevatorMaxLimit = Math.min(elevatorS.getLengthMeters(),
                             elevatorSetpointMeters) < ElevatorConstants.MAX_LENGTH.in(Meters) - Units.inchesToMeters(6)
