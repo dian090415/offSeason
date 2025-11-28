@@ -63,7 +63,7 @@ public class DriveToPoseCommand extends Command {
         var speeds = controller.calculate(currentPose, fakeState, targetPose.getRotation());
 
         // 發送給底層 drive subsystem（一般是 swerve）
-        drive.runVelocity(speeds);
+        drive.autorunVelocity(speeds);
     }
 
     @Override

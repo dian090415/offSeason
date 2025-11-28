@@ -162,10 +162,10 @@ public class Elevator extends SubsystemBase {
         talonFXConfigs.Slot0.withKS(0)
                 .withKV(K_V.in(VoltsPerRotationPerSecond))
                 .withKA(K_A.in(VoltsPerRotationPerSecondSquared))
-                .withKP(0.87)// TODO
+                .withKP(1.0)// TODO
                 .withKD(0.25);
-        talonFXConfigs.MotionMagic.withMotionMagicAcceleration(150)// 最大加速度
-                .withMotionMagicCruiseVelocity(72);// 最大速度
+        talonFXConfigs.MotionMagic.withMotionMagicAcceleration(75)// 最大加速度150
+                .withMotionMagicCruiseVelocity(40);// 最大速度72
 
         main.getConfigurator().apply(talonFXConfigs);
         follow.getConfigurator().apply(talonFXConfigs);

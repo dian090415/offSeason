@@ -102,7 +102,7 @@ public final class Constants {
 
         public static final Distance MIN_LENGTH = Inches.of(27.0);
         public static final Distance MIN_PADDED_LENGTH = MIN_LENGTH.plus(Inches.of(0.5));// 在最小長度的基礎上，加上 0.5 英吋作為安全墊
-        public static final Distance MAX_LENGTH = Inches.of(66.0);
+        public static final Distance MAX_LENGTH = Inches.of(56.0);//66
         public static final double MIN_LENGTH_ROTATIONS = MIN_LENGTH.in(Meters)
                 * MOTOR_ROTATIONS_PER_METER;
         public static final double MAX_LENGTH_ROTATIONS = MAX_LENGTH.in(Meters)

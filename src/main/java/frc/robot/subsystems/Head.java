@@ -51,7 +51,7 @@ public class Head extends SubsystemBase {
   public static final double K_S = 0;
   public static final double K_V = 4.0509;
   public static final double K_A = 0.30617;
-  public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 48.0 / 9.0 * 40.0 / 15.0 * 40.0 / 15.0;
+  public static final double MOTOR_ROTATIONS_PER_ARM_ROTATION = 48.0 / 9.0 * 40.0 / 24.0 * 40.0 / 15.0;;
   public static final Angle CCW_LIMIT = Degrees.of(146.8);
   public static final Angle CW_LIMIT = Degrees.of(-70);
   private MotionMagicVoltage m_profileReq = new MotionMagicVoltage(0);
@@ -93,7 +93,7 @@ public class Head extends SubsystemBase {
     // in init function
     var talonFXConfigs = new TalonFXConfiguration();
 
-    talonFXConfigs.Slot0.withKS(K_S).withKV(K_V).withKA(K_A).withKP(30).withKD(0);
+    talonFXConfigs.Slot0.withKS(K_S).withKV(K_V).withKA(K_A).withKP(20).withKD(0);
 
     talonFXConfigs.CurrentLimits.withStatorCurrentLimitEnable(true).withStatorCurrentLimit(120)
         .withSupplyCurrentLimitEnable(true).withSupplyCurrentLimit(60);

@@ -20,7 +20,7 @@ public abstract class AbstractArm {
 
   public record ArmPosition(Angle mainPivotAngle, Distance elevatorLength, Angle wristAngle) {
 
-    public static final Distance SAFE_PIVOT_ELEVATOR_LENGTH = ElevatorConstants.MIN_LENGTH.plus(Inches.of(4));
+    public static final Distance SAFE_PIVOT_ELEVATOR_LENGTH = ElevatorConstants.MIN_LENGTH.plus(Inches.of(8));
     public static final Angle SAFE_WRIST = WristConstants.CW_LIMIT.plus(Degrees.of(30));
     public double pivotRadians() {
       return mainPivotAngle.in(Radians);

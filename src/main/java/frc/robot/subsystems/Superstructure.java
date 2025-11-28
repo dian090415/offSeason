@@ -125,9 +125,9 @@ public class Superstructure extends SubsystemBase {
         })
                 // 2. 更新完後，接著執行移動 (因為 driveToPoseCommand 是讀取 Supplier，所以會讀到最新的值)
                 .andThen(new DriveToPoseCommand(
-                    drive,
-                    () -> goalPose2d, // 使用成員變數
-                    drive::getPose));
+                        drive,
+                        () -> goalPose2d, // 使用成員變數
+                        drive::getPose));
     }
 
     public Command LeftautoAlign() {
@@ -138,9 +138,9 @@ public class Superstructure extends SubsystemBase {
             }
             goalPose2d = ifreverse(goal);
         }).andThen(new DriveToPoseCommand(
-            drive,
-            () -> goalPose2d, // 使用成員變數
-            drive::getPose));
+                drive,
+                () -> goalPose2d, // 使用成員變數
+                drive::getPose));
     }
 
     public Command RightautoAlign() {
@@ -151,9 +151,9 @@ public class Superstructure extends SubsystemBase {
             }
             goalPose2d = ifreverse(goal);
         }).andThen(new DriveToPoseCommand(
-            drive,
-            () -> goalPose2d, // 使用成員變數
-            drive::getPose));
+                drive,
+                () -> goalPose2d, // 使用成員變數
+                drive::getPose));
     }
 
     public Command LeftautochoserAlign() {
@@ -224,12 +224,11 @@ public class Superstructure extends SubsystemBase {
     }
 
     public boolean ifclosegoal() {
-        // if (this.drive.getPose().getTranslation().getDistance(this.goalPose2d.getTranslation()) < 0.35) {
-        //     return true;
-        // } else {
-        //     return false;
-        // }
-        return false;
+        if (this.drive.getPose().getTranslation().getDistance(this.goalPose2d.getTranslation()) < 0.35) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void intakemodel() {
@@ -291,13 +290,13 @@ public class Superstructure extends SubsystemBase {
             case 1:
                 return Arm.Positions.L1;
             case 2:
-                return ifmechanismreverse ? Arm.Positions.L2 : Arm.Positions.L2_OPP;
+                return ifmechanismreverse ? Arm.Positions.L2_OPP : Arm.Positions.L2;
             case 3:
-                return ifmechanismreverse ? Arm.Positions.L3 : Arm.Positions.L3_OPP;
+                return ifmechanismreverse ? Arm.Positions.L3_OPP : Arm.Positions.L3;
             case 4:
-                return ifmechanismreverse ? Arm.Positions.L4 : Arm.Positions.L4_OPP;
+                return ifmechanismreverse ? Arm.Positions.L4_OPP : Arm.Positions.L4;
             default:
-                return ifmechanismreverse ? Arm.Positions.L4 : Arm.Positions.L4_OPP;
+                return ifmechanismreverse ? Arm.Positions.L4_OPP : Arm.Positions.L4;
         }
     }
 
@@ -312,8 +311,9 @@ public class Superstructure extends SubsystemBase {
     public Command putcoral() {
         return Commands.either(this.intake.outCoralReverse(), this.intake.outCoral(), () -> ifmechanismreverse);
     }
+
     public Command STOW() {
-        return Commands.parallel(this.arm.goToPosition(Arm.Positions.STOW),this.intake.stop());
+        return Commands.parallel(this.arm.goToPosition(Arm.Positions.STOW), this.intake.stop());
     }
 
     public Command putalage() {
@@ -362,5 +362,7 @@ public class Superstructure extends SubsystemBase {
             SmartDashboard.putNumberArray("goalPose", pose);
         }
         SmartDashboard.putNumber("tagid", this.tagId());
+        SmartDashboard.putNumber("Level", Level);
+        SmartDashboard.putBoolean("ifmechanismreverse", ifmechanismreverse);
     }
 }
