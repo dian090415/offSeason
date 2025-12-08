@@ -69,6 +69,9 @@ public class VisionFuser extends SubsystemBase {
             new Translation3d(-0.20979456, 0.13607890, 0.15952705),
             // 🛠️ 修改這裡：原本是 -180+30，改成 -180-30 (即 150度)
             new Rotation3d(0.0, 0.0, Math.toRadians(-180 - 30))));
+    public static final double borderPixels = 15.0; // 拒絕貼邊緣的角點（避免畸變/遮擋）
+    public static final double maxSingleTagDistanceMeters = Units.feetToMeters(6.0); // 單tag最遠可接受距離
+    public static final double maxYawRate = 720.0;//最大可以接受的旋轉速度
   }
 
   private static class CamWrapper {
@@ -87,11 +90,8 @@ public class VisionFuser extends SubsystemBase {
   private drive drive;
 
   // thresholds & tuning:
-  private final double borderPixels = 15.0; // 拒絕貼邊緣的角點（避免畸變/遮擋）
-  private final double minDistanceSingleTagMeters = Units.feetToMeters(4.0); // 單tag可信最小距離
-  private final double maxSingleTagDistanceMeters = Units.feetToMeters(6.0); // 單tag最遠可接受距離
-  private final double multiTagTrustedDistance = Units.feetToMeters(10.0); // 多tag可信距離
-  private final double minWeight = 1e-6; // 避免除以 0
+  private final double borderPixels = VisionConstants.borderPixels; // 拒絕貼邊緣的角點（避免畸變/遮擋）
+  private final double maxSingleTagDistanceMeters = VisionConstants.maxSingleTagDistanceMeters; // 單tag最遠可接受距離
 
   /**
    * @param cameraTransforms map: cameraName -> Transform3d (camera-to-robot
@@ -146,8 +146,8 @@ public class VisionFuser extends SubsystemBase {
         if (poseOpt.isEmpty())
           continue;
 
-        // 機器人旋轉太快時 (大於 720度/秒)，視覺會有殘影，不使用數據
-        if (Math.abs(drive.getGyroYawRate()) > 720)
+        // 機器人旋轉太快時 (大於 maxYawRate度/秒)，視覺會有殘影，不使用數據
+        if (Math.abs(drive.getGyroYawRate()) > VisionConstants.maxYawRate)
           continue;
 
         var est = poseOpt.get();

@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.Vision.LimelightHelpers;
 import frc.robot.subsystems.NewDrive.drive;
+import frc.robot.subsystems.NewVision.VisionFuser.VisionConstants;
 
 public class Vision extends SubsystemBase {
     
@@ -45,7 +46,7 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(
             llName, 
             drive.getRotation2d().getDegrees(), 
-            0, 0, 0, 0, 0
+            drive.getGyroYawRate(), 0, 0, 0, 0
         );
 
         // ---------------------------------------------------------
@@ -67,9 +68,9 @@ public class Vision extends SubsystemBase {
         // 沒看到 Tag 則跳過
         if (mt2.tagCount == 0) return;
 
-        // 機器人旋轉太快時 (大於 720度/秒)，視覺會有殘影，不使用數據
+        // 機器人旋轉太快時 (大於 maxYawRate度/秒)，視覺會有殘影，不使用數據
         // (假設 drive.getGyroYawRate() 回傳 deg/s)
-        if (Math.abs(drive.getGyroYawRate()) > 720) return;
+        if (Math.abs(drive.getGyroYawRate()) > VisionConstants.maxYawRate) return;
 
         // 檢查座標是否跑出場地外 (X: 0~16.54m, Y: 0~8.21m)
         if (mt2.pose.getX() < 0 || mt2.pose.getX() > 16.54 || 
