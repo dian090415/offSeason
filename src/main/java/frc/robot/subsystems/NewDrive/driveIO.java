@@ -28,4 +28,6 @@ public interface driveIO {
 
     void stopModules();
 
+    double getGyroYawRate();
+
 }

@@ -3,6 +3,7 @@ package frc.robot.subsystems.NewDrive;
 import org.littletonrobotics.junction.Logger;
 
 import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -11,6 +12,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -88,18 +91,22 @@ public class drive extends SubsystemBase {
     public double getVelocity() {
         // 1. 從 IO 取得 4 顆輪子的當前狀態 (包含速度與角度)
         SwerveModuleState[] states = io.getModuleStates();
-    
+
         // 2. 使用正向運動學 (Forward Kinematics) 將輪子速度轉換為底盤速度 (ChassisSpeeds)
         // kinematics 會算出 Vx (X軸速度), Vy (Y軸速度), Omega (旋轉速度)
         var chassisSpeeds = kinematics.toChassisSpeeds(states);
-    
+
         // 3. 使用畢氏定理計算合速度 (√(vx² + vy²))
         // Math.hypot 是計算直角三角形斜邊的快速函式
         return Math.hypot(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
     }
 
-    public double getHeading(){
-        return this.io.getHeading();
+    public double getGyroYawRate() {
+        return this.io.getGyroYawRate();
+    }
+
+    public Rotation2d getRotation2d() {
+        return this.io.getRotation2d();
     }
 
     public void followTrajectory(SwerveSample sample) {
@@ -138,30 +145,32 @@ public class drive extends SubsystemBase {
 
         this.io.setModuleStates(setpointStates);
     }
+
     public void autorunVelocity(ChassisSpeeds robotRelativeSpeeds) { // 參數名稱改一下比較清楚
 
         // ❌ 刪除這行！不要在這裡做座標轉換
-        // ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, io.getRotation2d());
-    
+        // ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds,
+        // io.getRotation2d());
+
         // ✅ 直接使用傳進來的 speeds (假設已經是機器人相對座標)
         // 這裡做 discretize 是對的 (修正飄移)
         ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
-    
+
         // ... 後面的邏輯保持不變 ...
         SwerveModuleState[] SetPointStatesUnoptimized = kinematics.toSwerveModuleStates(discreteSpeeds);
-    
+
         currentSetpoint = swerveSetpointGenerator.generateSetpoint(
                 DriveConstants.moduleLimitsFree,
                 currentSetpoint,
                 discreteSpeeds,
                 0.02);
-    
+
         SwerveModuleState[] setpointStates = currentSetpoint.moduleStates();
-    
+
         Logger.recordOutput("Drive/SwerveStates/SetpointsUnoptimized", SetPointStatesUnoptimized);
         Logger.recordOutput("Drive/SwerveStates/Setpoints", setpointStates);
         Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
-    
+
         this.io.setModuleStates(setpointStates);
     }
 
@@ -190,13 +199,12 @@ public class drive extends SubsystemBase {
         poseEstimator.resetPose(pose);
     }
 
-    public void addVisionMeasurement(Pose2d pose) {
-        this.poseEstimator.addVisionMeasurement(pose, Timer.getFPGATimestamp());
+    public void OVaddVisionMeasurement(Pose2d pose, double timestampSeconds) {
+        this.poseEstimator.addVisionMeasurement(pose, timestampSeconds);
     }
 
-    public void OVaddVisionMeasurement(Pose2d pose, double timestampSeconds) {
-        this.poseEstimator.addVisionMeasurement(pose,
-                timestampSeconds);
+    public void addVisionMeasurement(Pose2d pose, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs) {
+        this.poseEstimator.addVisionMeasurement(getPose(), getGyroYawRate(), visionMeasurementStdDevs);
     }
 
     @Override

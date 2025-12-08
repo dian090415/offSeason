@@ -340,37 +340,9 @@ public Command alagereef() {
     public Command putalage() {
         return Commands.either(this.intake.outAlgae(), this.intake.outAlgae(), () -> ifmechanismreverse);
     }
-
-    // 假設你已經建立好 HolonomicDriveController
-    // HolonomicDriveController controller = new
-    // HolonomicDriveController(xController, yController, thetaController);
-
-    public void drivetopose(Supplier<Pose2d> goalpose) {
-        Pose2d currentPose = drive.getPose();
-        Pose2d targetPose = goalpose.get();
-
-        // 建立假的 Trajectory.State（因為只有一個目標 Pose）
-        Trajectory.State fakeState = new Trajectory.State(
-                0.0, 0.0, 0.0,
-                targetPose,
-                0.0);
-
-        // 使用 HONPID 控制器計算速度
-        ChassisSpeeds speeds = controller.calculate(currentPose, fakeState, targetPose.getRotation());
-
-        // 發送速度給底盤
-        drive.runVelocity(speeds);
+    public Command SetSafe(){
+        return Commands.parallel(this.arm.goToPosition(Arm.Positions.STOW), this.intake.stop());
     }
-
-    public boolean atReference() {
-        return controller.atReference();
-    }
-
-    // public Command driveToPoseCommand(Supplier<Pose2d> goalpose) {
-    // return Commands
-    // .sequence(Commands.run(() -> this.drivetopose(goalpose), this).until(() ->
-    // this.atReference()));
-    // }
 
     @Override
     public void periodic() {

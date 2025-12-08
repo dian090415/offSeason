@@ -96,4 +96,8 @@ public class driveIOHardware implements driveIO {
         BL.resetEncoders();
         BR.resetEncoders();
     }
+    @Override
+    public double getGyroYawRate() {
+        return this.gyro.getRate();
+    }
 }

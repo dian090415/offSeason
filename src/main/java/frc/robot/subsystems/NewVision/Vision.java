@@ -44,7 +44,7 @@ public class Vision extends SubsystemBase {
         // 這是讓單 Tag 變準的關鍵！
         LimelightHelpers.SetRobotOrientation(
             llName, 
-            drive.getHeading().getDegrees(), 
+            drive.getRotation2d().getDegrees(), 
             0, 0, 0, 0, 0
         );
 

@@ -68,7 +68,7 @@ public class RobotContainer {
   private final Head Head = new Head();
   private final Arm arm = new Arm();
   private final Intake intake = new Intake();
-  private final Superstructure superstructure = new Superstructure(arm, intake, drive, vision , visionFuser);
+  private final Superstructure superstructure = new Superstructure(arm, intake, drive, vision, visionFuser);
 
   public Pose2d goalPose2d;
 
@@ -149,17 +149,25 @@ public class RobotContainer {
         .onTrue(this.superstructure.setlevelCommand(3));
     this.controller.L4()
         .onTrue(this.superstructure.setlevelCommand(4));
-    //   this.co_driver.L1()
-    //     .onTrue(this.arm.goToPosition(Arm.Positions.L1));
+    // this.co_driver.L1()
+    // .onTrue(this.arm.goToPosition(Arm.Positions.L1));
     // this.co_driver.L2()
-    //     .onTrue(this.arm.goToPosition(Arm.Positions.L2));
+    // .onTrue(this.arm.goToPosition(Arm.Positions.L2));
     // this.co_driver.L3()
-    //     .onTrue(this.arm.goToPosition(Arm.Positions.L3));
+    // .onTrue(this.arm.goToPosition(Arm.Positions.L3));
     // this.co_driver.L4()
-    //     .onTrue(this.arm.goToPosition(Arm.Positions.L4));
+    // .onTrue(this.arm.goToPosition(Arm.Positions.L4));
 
     this.main_driver.zeroHeading().onTrue(new InstantCommand(() -> drive.zeroHeading()));
     this.co_driver.zeroHeading().onTrue(new InstantCommand(() -> drive.zeroHeading()));
+  }
+
+  public VisionFuser getVisionFuser() {
+    return this.visionFuser;
+  }
+
+  public Command setsafe(){
+    return this.superstructure.SetSafe();
   }
 
   public Command getAutonomousCommand() {
