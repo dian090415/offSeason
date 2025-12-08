@@ -61,16 +61,7 @@ public class drive extends SubsystemBase {
                 this.kinematics,
                 io.getRotation2d(),
                 this.io.getModulePositions(),
-                initialPose,
-
-                // 1. 狀態標準差 (State Std Devs) - 信任里程計 (Odometry) 的程度
-                // 設小一點 (0.1)，代表我們很信任輪子和陀螺儀
-                VecBuilder.fill(0.1, 0.1, 0.1),
-
-                // 2. 視覺標準差 (Vision Std Devs) - 信任相機的程度
-                // 為了測試，我們先設得非常小 (0.1)，強迫它相信相機！
-                // 之後調校時可以改回 0.5 或 0.9
-                VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(10)));
+                initialPose);
 
         this.swerveSetpointGenerator = new SwerveSetpointGenerator(
                 this.kinematics,
@@ -94,6 +85,23 @@ public class drive extends SubsystemBase {
         return autodrive;
     }
 
+    public double getVelocity() {
+        // 1. 從 IO 取得 4 顆輪子的當前狀態 (包含速度與角度)
+        SwerveModuleState[] states = io.getModuleStates();
+    
+        // 2. 使用正向運動學 (Forward Kinematics) 將輪子速度轉換為底盤速度 (ChassisSpeeds)
+        // kinematics 會算出 Vx (X軸速度), Vy (Y軸速度), Omega (旋轉速度)
+        var chassisSpeeds = kinematics.toChassisSpeeds(states);
+    
+        // 3. 使用畢氏定理計算合速度 (√(vx² + vy²))
+        // Math.hypot 是計算直角三角形斜邊的快速函式
+        return Math.hypot(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+    }
+
+    public double getHeading(){
+        return this.io.getHeading();
+    }
+
     public void followTrajectory(SwerveSample sample) {
         // Get the current pose of the robot
         Pose2d pose = poseEstimator.getEstimatedPosition();
@@ -105,7 +113,7 @@ public class drive extends SubsystemBase {
                 sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
         // Apply the generated speeds
-        autoVelocity(speeds);
+        runVelocity(speeds);
     }
 
     public void runVelocity(ChassisSpeeds speeds) {
@@ -155,14 +163,6 @@ public class drive extends SubsystemBase {
         Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
     
         this.io.setModuleStates(setpointStates);
-    }
-
-    public void autoVelocity(ChassisSpeeds speeds) {
-
-        ChassisSpeeds relativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, this.io.getRotation2d());
-        ChassisSpeeds discretizeSpeeds = ChassisSpeeds.discretize(relativeSpeeds, Robot.kDefaultPeriod);
-        SwerveModuleState[] states = kinematics.toSwerveModuleStates(discretizeSpeeds);
-        this.io.setModuleStates(states);
     }
 
     public void autoAlign(double[] speeds) {

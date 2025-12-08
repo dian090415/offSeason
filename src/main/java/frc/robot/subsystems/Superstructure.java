@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
@@ -15,6 +16,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.subsystems.Arm.AbstractArm.ArmPosition;
@@ -171,6 +173,9 @@ public class Superstructure extends SubsystemBase {
     public Command Rightreef() {
         return Commands.parallel(this.Levelreef(), this.RightautoAlign());
     }
+    public Command Alagereef(){
+        return Commands.parallel(this.Levelreef(), this.alageautoAlign());
+    }
 
     public Pose2d getalageClosestReefTagId() {
         double minDistance = Double.POSITIVE_INFINITY; // 初始設為無限大
@@ -300,9 +305,25 @@ public class Superstructure extends SubsystemBase {
         }
     }
 
-    public Command Levelreef() {
-        return Commands.sequence(new WaitUntilCommand(() -> ifclosegoal()), this.arm.goToPosition(LevelPosition()));
-    }
+
+public Command Levelreef() {
+    return Commands.sequence(
+        new WaitUntilCommand(() -> ifclosegoal()),
+        
+        Commands.defer(() -> {
+            return this.arm.goToPosition(LevelPosition());
+        }, Set.of((Subsystem) arm)) // 🛠️ 修正：加上 (Subsystem) 強制轉型
+    );
+}
+public Command alagereef() {
+    return Commands.sequence(
+        new WaitUntilCommand(() -> ifclosegoal()),
+        
+        Commands.defer(() -> {
+            return this.arm.goToPosition(LevelPosition());
+        }, Set.of((Subsystem) arm)) // 🛠️ 修正：加上 (Subsystem) 強制轉型
+    );
+}
 
     public Command put() {
         return Commands.either(putcoral(), putalage(), () -> this.coralsensor.isCoralIn());

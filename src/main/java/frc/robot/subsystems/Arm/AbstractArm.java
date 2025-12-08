@@ -12,10 +12,11 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.WristConstants;
 
-public abstract class AbstractArm {
+public abstract class AbstractArm extends SubsystemBase{
   public MechanismLigament2d ARM;
 
   public record ArmPosition(Angle mainPivotAngle, Distance elevatorLength, Angle wristAngle) {
