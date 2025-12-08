@@ -138,9 +138,9 @@ public class RobotContainer {
         .whileTrue(this.superstructure.put())
         .onFalse(this.superstructure.STOW());
     this.co_driver.LeftAilgn()
-        .whileTrue(this.superstructure.LeftautochoserAlign());
+        .onTrue(this.superstructure.LeftautochoserAlign());
     this.co_driver.RightAilgn()
-        .whileTrue(this.superstructure.RightautochoserAlign());
+        .onTrue(this.superstructure.RightautochoserAlign());
     this.controller.L1()
         .onTrue(this.superstructure.setlevelCommand(1));
     this.controller.L2()

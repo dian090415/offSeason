@@ -68,7 +68,6 @@ public class Robot extends TimedRobot {
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
   public void disabledInit() {
-    m_robotContainer.setsafe();//disabled的時候講arm位置設定到安全的位置
   }
 
   @Override
