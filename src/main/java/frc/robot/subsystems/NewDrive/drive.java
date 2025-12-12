@@ -204,7 +204,7 @@ public class drive extends SubsystemBase {
     }
 
     public void addVisionMeasurement(Pose2d pose, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs) {
-        this.poseEstimator.addVisionMeasurement(getPose(), getGyroYawRate(), visionMeasurementStdDevs);
+        this.poseEstimator.addVisionMeasurement(pose, timestampSeconds, visionMeasurementStdDevs);
     }
 
     @Override

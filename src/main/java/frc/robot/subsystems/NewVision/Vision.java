@@ -103,6 +103,14 @@ public class Vision extends SubsystemBase {
             mt2.timestampSeconds, // 這是正確的拍攝時間 (Latency Compensated)
             VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds))
         );
+
+        double[] pose = { 
+            mt2.pose.getX(),
+            mt2.pose.getY(),
+            mt2.pose.getRotation().getRadians()
+        };
+
+        SmartDashboard.putNumberArray("LLPose", pose);
     }
 
     // 提供給外部使用的 Getter
