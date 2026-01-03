@@ -10,6 +10,10 @@ import org.photonvision.simulation.VisionSystemSim;
 
 import com.ctre.phoenix6.swerve.jni.SwerveJNI.DriveState;
 import com.google.flatbuffers.Constants;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -19,6 +23,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -82,6 +87,9 @@ public class RobotContainer {
     return DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Red);
   }
 
+  private final SendableChooser<Command> autoChooser;
+  private final Field2d field;
+
   // -----------------------------------------------------------------
 
   public RobotContainer() {
@@ -106,6 +114,39 @@ public class RobotContainer {
         .bind("intake stop", this.autointakestop())
         .bind("intake up", this.autointakeup());
 
+    field = new Field2d();
+    SmartDashboard.putData("Field", field);
+
+    // Logging callback for current robot pose
+    PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
+      // Do whatever you want with the pose here
+      field.setRobotPose(pose);
+    });
+
+    // Logging callback for target robot pose
+    PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
+      // Do whatever you want with the pose here
+      field.getObject("target pose").setPose(pose);
+    });
+
+    // Logging callback for the active path, this is sent as a list of poses
+    PathPlannerLogging.setLogActivePathCallback((poses) -> {
+      // Do whatever you want with the poses here
+      field.getObject("path").setPoses(poses);
+    });
+
+    // 2. 在建構子裡面建立選單 (使用 PathPlanner 的功能)
+    autoChooser = AutoBuilder.buildAutoChooser();
+
+    // 3. 把選單推送到 Dashboard (SmartDashboard)
+    SmartDashboard.putData("Auto Chooser", autoChooser);
+
+    NamedCommands.registerCommand("L4put", this.autoL4put());
+
+    PathPlannerAuto autoCommand = new PathPlannerAuto("test");
+
+    autoCommand.event("L4 Prepare").onTrue(this.autoL4Prepare());
+
     this.drive.setDefaultCommand(new NewDriveCmd(drive, main_driver, co_driver));
     // this.Swerve.setDefaultCommand(
     // new DriveCmd(
@@ -124,7 +165,6 @@ public class RobotContainer {
     // () -> this.controller.getLeftX(),
     // () -> this.controller.getRightX(),
     // () -> true));
-
     this.configBindings();
   }
 
@@ -138,9 +178,9 @@ public class RobotContainer {
         .whileTrue(this.superstructure.put())
         .onFalse(this.superstructure.STOW());
     this.co_driver.LeftAilgn()
-        .onTrue(this.superstructure.LeftautochoserAlign());
+        .whileTrue(this.superstructure.LeftautochoserAlign());
     this.co_driver.RightAilgn()
-        .onTrue(this.superstructure.RightautochoserAlign());
+        .whileTrue(this.superstructure.RightautochoserAlign());
     this.controller.L1()
         .onTrue(this.superstructure.setlevelCommand(1));
     this.controller.L2()
@@ -166,12 +206,12 @@ public class RobotContainer {
     return this.visionFuser;
   }
 
-  public Command setsafe(){
+  public Command setsafe() {
     return this.superstructure.SetSafe();
   }
 
   public Command getAutonomousCommand() {
-    return autotest();
+    return autoChooser.getSelected();
   }
 
   // -----------------auto---------------------------------------
@@ -182,7 +222,6 @@ public class RobotContainer {
   }
 
   public Command autoL4Prepare() {
-    SmartDashboard.putBoolean("autoL4Preparerun", true);
     return Commands.sequence(this.arm.goToPosition(Arm.Positions.L4));
   }
 

@@ -26,6 +26,11 @@ import frc.robot.subsystems.NewVision.Vision;
 import frc.robot.subsystems.NewVision.VisionFuser;
 import frc.robot.util.Swerve.SwerveSetpoint;
 import frc.robot.util.Swerve.SwerveSetpointGenerator;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import edu.wpi.first.wpilibj.DriverStation;
 
 public class drive extends SubsystemBase {
 
@@ -56,6 +61,34 @@ public class drive extends SubsystemBase {
 
     public drive(driveIO io) {
 
+        RobotConfig config = null;
+        try {
+            config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        AutoBuilder.configure(
+                this::getPose, // 告訴 AutoBuilder 機器人在哪 (Pose2d)
+                this::resetOdometry, // 告訴 AutoBuilder 如何重設位置
+                this::getRobotRelativeSpeeds, // ❌ 你原本沒有這個方法，請看下面第 3 點新增
+                (speeds, feedforwards) -> autorunVelocity(speeds), // ✅ 使用你寫好的 robot-relative 驅動方法
+                new PPHolonomicDriveController( 
+                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID (請依照實際情況調整)
+                        new PIDConstants(5.0, 0.0, 0.0)  // Rotation PID (請依照實際情況調整)
+                ),
+                config, 
+                () -> {
+                    // 自動判斷是否為紅隊 (路徑翻轉)
+                    var alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red;
+                    }
+                    return false;
+                },
+                this // Subsystem 參考
+        );
+
         this.io = io;
 
         Pose2d initialPose = new Pose2d(0, 0, io.getRotation2d());
@@ -75,6 +108,12 @@ public class drive extends SubsystemBase {
         io.zeroHeading();
         io.resetEncoders();
         headingController.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
+    // 👇 新增這個方法給 AutoBuilder 用
+    public ChassisSpeeds getRobotRelativeSpeeds() {
+        // 將 4 顆輪子的狀態轉回底盤的 X, Y, Omega 速度
+        return kinematics.toChassisSpeeds(io.getModuleStates());
     }
 
     public SwerveDrivePoseEstimator poseEstimator() {
@@ -226,5 +265,15 @@ public class drive extends SubsystemBase {
 
         SmartDashboard.putNumber("turnRate", io.getTurnRate());
     }
-
+    @Override
+    public void simulationPeriodic() {
+        // 1. 算出當前底盤的理論速度
+        var speeds = kinematics.toChassisSpeeds(io.getModuleStates());
+        
+        // 2. 算出 20ms 內轉了多少度
+        double angleChange = Math.toDegrees(speeds.omegaRadiansPerSecond * 0.02);
+        
+        // 3. 傳給 IO 更新 Gyro (IO 內部會把它反轉寫入)
+        io.updateSimGyro(angleChange);
+    }
 }

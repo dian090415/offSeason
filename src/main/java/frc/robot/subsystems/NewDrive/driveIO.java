@@ -30,4 +30,5 @@ public interface driveIO {
 
     double getGyroYawRate();
 
+    default void updateSimGyro(double angleChange) {}
 }

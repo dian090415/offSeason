@@ -229,11 +229,11 @@ public class Superstructure extends SubsystemBase {
     }
 
     public boolean ifclosegoal() {
-        if (this.drive.getPose().getTranslation().getDistance(this.goalPose2d.getTranslation()) < 0.35) {
-            return true;
-        } else {
+        // if (this.drive.getPose().getTranslation().getDistance(this.goalPose2d.getTranslation()) < 0.35) {
+        //     return true;
+        // } else {
             return false;
-        }
+        // }
     }
 
     public void intakemodel() {

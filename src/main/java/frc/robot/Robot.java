@@ -16,7 +16,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.NewDrive.*;
 import frc.robot.subsystems.NewVision.Vision;
 import frc.robot.subsystems.NewVision.VisionFuser;
-import frc.robot.subsystems.NewVision.VisionFuser.VisionConstants;;
+import frc.robot.subsystems.NewVision.VisionFuser.VisionConstants;
+import com.pathplanner.lib.commands.FollowPathCommand;
 
 /**
  * The methods in this class are called automatically corresponding to each
@@ -41,6 +42,12 @@ public class Robot extends TimedRobot {
     // and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+  }
+
+  @Override
+  public void robotInit() {
+    //這行就是我們要加的暖機指令
+    FollowPathCommand.warmupCommand().schedule();
   }
 
   /**
