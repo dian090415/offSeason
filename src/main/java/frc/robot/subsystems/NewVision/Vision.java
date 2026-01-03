@@ -12,7 +12,7 @@ import frc.robot.subsystems.NewDrive.drive;
 import frc.robot.subsystems.NewVision.VisionFuser.VisionConstants;
 
 public class Vision extends SubsystemBase {
-
+    
     private final drive drive;
     private final String leftName = "limelight-left";
     private final String rightName = "limelight-right";
@@ -30,7 +30,7 @@ public class Vision extends SubsystemBase {
         // 每一週期處理兩顆鏡頭
         processLimelight(leftName);
         processLimelight(rightName);
-
+        
         // Debug 顯示
         SmartDashboard.putNumber("Vision/LeftID", leftTagId);
         SmartDashboard.putNumber("Vision/RightID", rightTagId);
@@ -44,15 +44,16 @@ public class Vision extends SubsystemBase {
         // 這裡假設 drive.getHeading() 回傳 Rotation2d
         // 這是讓單 Tag 變準的關鍵！
         LimelightHelpers.SetRobotOrientation(
-                llName,
-                drive.getRotation2d().getDegrees(),
-                drive.getGyroYawRate(), 0, 0, 0, 0);
+            llName, 
+            drive.getRotation2d().getDegrees(), 
+            drive.getGyroYawRate(), 0, 0, 0, 0
+        );
 
         // ---------------------------------------------------------
         // 2. 讀取 MT2 估算結果
         // ---------------------------------------------------------
         LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(llName);
-
+        
         // 更新 Tag ID (取主目標)
         if (llName.equals(leftName)) {
             leftTagId = (int) LimelightHelpers.getFiducialID(leftName);
@@ -63,25 +64,17 @@ public class Vision extends SubsystemBase {
         // ---------------------------------------------------------
         // 3. 過濾無效數據 (Filters)
         // ---------------------------------------------------------
-        // ✅ 1. 先檢查 mt2 是否為 null
-        if (mt2 == null) {
-            // 如果是 null，代表 Limelight 沒連上或沒數據，直接跳過，不要崩潰
-            return;
-        }
-
+        
         // 沒看到 Tag 則跳過
-        if (mt2.tagCount == 0)
-            return;
+        if (mt2.tagCount == 0) return;
 
         // 機器人旋轉太快時 (大於 maxYawRate度/秒)，視覺會有殘影，不使用數據
         // (假設 drive.getGyroYawRate() 回傳 deg/s)
-        if (Math.abs(drive.getGyroYawRate()) > VisionConstants.maxYawRate)
-            return;
+        if (Math.abs(drive.getGyroYawRate()) > VisionConstants.maxYawRate) return;
 
         // 檢查座標是否跑出場地外 (X: 0~16.54m, Y: 0~8.21m)
-        if (mt2.pose.getX() < 0 || mt2.pose.getX() > 16.54 ||
-                mt2.pose.getY() < 0 || mt2.pose.getY() > 8.21)
-            return;
+        if (mt2.pose.getX() < 0 || mt2.pose.getX() > 16.54 || 
+            mt2.pose.getY() < 0 || mt2.pose.getY() > 8.21) return;
 
         // ---------------------------------------------------------
         // 4. 計算標準差 (Trust Level)
@@ -92,12 +85,12 @@ public class Vision extends SubsystemBase {
 
         if (mt2.tagCount >= 2) {
             // 多 Tag：非常信任
-            xyStds = 0.5;
-            degStds = 6.0;
+            xyStds = 0.5; 
+            degStds = 6.0; 
         } else {
             // 單 Tag：信任度隨距離遞減 (距離越遠，標準差越大)
             // 這裡使用距離的平方來快速降低遠距離的權重
-            xyStds = 1.0 * (avgDist * avgDist);
+            xyStds = 1.0 * (avgDist * avgDist); 
             degStds = 999.0; // 單 Tag 完全不信任 MT2 算出的角度，只用它的 X/Y
         }
 
@@ -106,17 +99,21 @@ public class Vision extends SubsystemBase {
         // ---------------------------------------------------------
         // 這裡需要你的 Drive 支援接收標準差 (Vector<N3>)
         drive.addVisionMeasurement(
-                mt2.pose, // 視覺算出的 Pose2d
-                mt2.timestampSeconds, // 這是正確的拍攝時間 (Latency Compensated)
-                VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds)));
+            mt2.pose,             // 視覺算出的 Pose2d
+            mt2.timestampSeconds, // 這是正確的拍攝時間 (Latency Compensated)
+            VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds))
+        );
+
+        double[] pose = { 
+            mt2.pose.getX(),
+            mt2.pose.getY(),
+            mt2.pose.getRotation().getRadians()
+        };
+
+        SmartDashboard.putNumberArray("LLPose", pose);
     }
 
     // 提供給外部使用的 Getter
-    public int getLeftTagId() {
-        return leftTagId;
-    }
-
-    public int getRightTagId() {
-        return rightTagId;
-    }
+    public int getLeftTagId() { return leftTagId; }
+    public int getRightTagId() { return rightTagId; }
 }
